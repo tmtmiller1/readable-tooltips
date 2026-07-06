@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Database>
+    <EnglishText>
+        <Row Tag="LOC_MOD_READABLE_TOOLTIPS_NAME">
+            <Text>Readable Tool Tips</Text>
+        </Row>
+        <Row Tag="LOC_MOD_READABLE_TOOLTIPS_DESCRIPTION">
+            <Text>Nudges every game tooltip a small distance away from the cursor so hover text is no longer hidden behind the pointer. Pure spacing — no font or content change, works with other tooltip mods, fully reversible.</Text>
+        </Row>
+    </EnglishText>
+</Database>

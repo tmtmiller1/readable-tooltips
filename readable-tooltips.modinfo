@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Mod element's version="1" is the ModInfo SCHEMA version, NOT the
+     release version. The release version is <Properties><Version> below. -->
+<Mod id="readable-tooltips" version="1" xmlns="ModInfo">
+    <Properties>
+        <Name>LOC_MOD_READABLE_TOOLTIPS_NAME</Name>
+        <Description>LOC_MOD_READABLE_TOOLTIPS_DESCRIPTION</Description>
+        <Authors>Tower</Authors>
+        <SpecialThanks>The demographics mod, whose per-tooltip readability nudge this generalizes to the whole game.</SpecialThanks>
+        <Package>ReadableTooltipsMod</Package>
+        <PackageSortIndex>1000</PackageSortIndex>
+        <Version>1.0.1</Version>
+    </Properties>
+    <Dependencies>
+        <Mod id="base-standard" title="LOC_MODULE_BASE_STANDARD_NAME" />
+    </Dependencies>
+    <ActionCriteria>
+        <Criteria id="always">
+            <AlwaysMet></AlwaysMet>
+        </Criteria>
+    </ActionCriteria>
+    <ActionGroups>
+        <!-- Shell scope: main-menu / front-end tooltips. High LoadOrder so our
+             override lands after the base tooltip stylesheet. -->
+        <ActionGroup id="readable-tooltips-shell" scope="shell" criteria="always">
+            <Properties>
+                <LoadOrder>100</LoadOrder>
+            </Properties>
+            <Actions>
+                <UpdateText>
+                    <Item>text/en_us/ModText.xml</Item>
+                </UpdateText>
+                <UIScripts>
+                    <Item>ui/readable-tooltips.js</Item>
+                </UIScripts>
+                <ImportFiles>
+                    <Item>ui/readable-tooltips.js</Item>
+                </ImportFiles>
+            </Actions>
+        </ActionGroup>
+        <!-- Game scope: in-game tooltips (plot, unit, yield, everything). -->
+        <ActionGroup id="readable-tooltips-game" scope="game" criteria="always">
+            <Properties>
+                <LoadOrder>100</LoadOrder>
+            </Properties>
+            <Actions>
+                <UpdateText>
+                    <Item>text/en_us/ModText.xml</Item>
+                </UpdateText>
+                <UIScripts>
+                    <Item>ui/readable-tooltips.js</Item>
+                </UIScripts>
+                <ImportFiles>
+                    <Item>ui/readable-tooltips.js</Item>
+                </ImportFiles>
+            </Actions>
+        </ActionGroup>
+    </ActionGroups>
+    <LocalizedText>
+        <File>text/en_us/ModText.xml</File>
+    </LocalizedText>
+</Mod>
