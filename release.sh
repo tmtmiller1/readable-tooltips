@@ -95,6 +95,7 @@ echo "==> Mirroring $SRC_DIR/ → $TARGET_DIR/ (excluding dev cruft)"
 rsync -a --exclude='.git' --exclude='.gitignore' --exclude='.DS_Store' --exclude='dist' \
     --exclude='release.sh' --exclude='*.bak' --exclude='node_modules' \
     --exclude='docs' --exclude='steam_workshop_id.txt' --exclude='CONTRIBUTING.md' \
+    --exclude='tests' --exclude='package.json' --exclude='eslint.config.js' \
     "$SRC_DIR"/ "$TARGET_DIR"/
 
 echo "==> Syntax-checking dist JS"

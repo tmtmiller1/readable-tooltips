@@ -7,6 +7,56 @@ matching section below by `release.sh`.
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-07-08
+
+Readability fix for the tech/civic "what you unlocked" popup.
+
+### Fixed
+- **Unlock-popup tooltips no longer have their top-left corner clipped.** When a
+  Civic or Tech completed, hovering the newly-unlocked items showed a tooltip
+  whose top-left was cut off. Those are System 2 (`data-tooltip-content` /
+  `#tooltip-root`) tooltips, which the game already offsets 24px from the cursor
+  **and** clamps to the screen edge. The offset this mod added to that container
+  in 1.0.1 was a CSS `transform` applied *after* the game's clamp, and
+  `#tooltip-root` carries its own border/background/padding with no transparent
+  wrapper — so there was no clamp-respecting CSS lever. For the tall, multi-line
+  unlock tooltips (which flip into a corner and clamp tight to the edge), the
+  post-clamp shift pushed the box off-screen and clipped it. Short yield/decision
+  tooltips had slack, so only the unlock popup was visibly affected.
+
+### Changed
+- **The mod now offsets only System 1 (`#tooltips`)** — the `fxs-tooltip`
+  plot/unit/world hovers that place the tooltip's corner *exactly* at the cursor
+  with no built-in offset, which is the readability problem this mod exists to
+  solve. System 2 is left alone (its own 24px offset is adequate at normal UI
+  scale); System 3 (`#uinext-tooltips`) remains untouched as before. The only
+  loss is a marginal spacing improvement for yield tooltips at >100% UI scale.
+
+## [1.0.2] - 2026-07-06
+
+Maintenance release. No change to what ships or how the mod behaves in-game —
+the shipped `ui/readable-tooltips.js` is byte-for-byte identical to 1.0.1. This
+release adds a developer quality gate around the source so future changes stay
+regression-safe. All of the tooling below is dev-only and excluded from the
+Workshop zip.
+
+### Added
+- **Automated regression test.** `tests/readable-tooltips.test.mjs` drives the
+  style injection with a stubbed DOM and asserts it is idempotent — one `<style>`
+  is added on first run and never duplicated on re-init — locking in the
+  "safe to run in every UI context" guarantee the mod relies on.
+- **ESLint quality gate.** `eslint.config.js` (flat config) enforces the same
+  modularization and correctness rules used across the active tower mods —
+  complexity/size ceilings, `no-undef` against the declared engine/browser
+  globals, `eqeqeq`, and no unused vars — so drift is caught before release.
+- **One-command verification.** `package.json` now exposes `lint`, `check`
+  (`node --check`), `test`, and a combined `verify` script; `npm run verify`
+  runs the full gate. `package.json` version is realigned to the release version.
+
+### Changed
+- Nothing in the shipped mod. Behavior, positioning, and compatibility are
+  unchanged from 1.0.1.
+
 ## [1.0.1] - 2026-07-04
 
 Also offsets yield-amount and decision/reward tooltips, which use a second
