@@ -9,7 +9,12 @@
         <SpecialThanks>The demographics mod, whose per-tooltip readability nudge this generalizes to the whole game.</SpecialThanks>
         <Package>ReadableTooltipsMod</Package>
         <PackageSortIndex>1000</PackageSortIndex>
-        <Version>1.0.3</Version>
+        <!-- Cosmetic UI-only mod: no gameplay/database change, so it can be
+             injected into ANY session including existing saved games. Without
+             this the game treats the mod as save-affecting and silently skips it
+             when loading a save it wasn't created with. -->
+        <AffectsSavedGames>0</AffectsSavedGames>
+        <Version>1.0.4</Version>
     </Properties>
     <Dependencies>
         <Mod id="base-standard" title="LOC_MODULE_BASE_STANDARD_NAME" />
@@ -33,12 +38,13 @@
                 <UIScripts>
                     <Item>ui/readable-tooltips.js</Item>
                 </UIScripts>
-                <ImportFiles>
-                    <Item>ui/readable-tooltips.js</Item>
-                </ImportFiles>
             </Actions>
         </ActionGroup>
-        <!-- Game scope: in-game tooltips (plot, unit, yield, everything). -->
+        <!-- Game scope: the in-game `#tooltip-root` tooltips (yield amounts,
+             decision/reward previews, tech/civic unlock popup). readable-tooltips.js
+             wraps TooltipController.reposition to widen the cursor gap BEFORE the
+             controller's on-screen clamp, so tooltips clear the cursor yet still
+             re-fit on-screen (no clipped tech/civic popup). See the file header. -->
         <ActionGroup id="readable-tooltips-game" scope="game" criteria="always">
             <Properties>
                 <LoadOrder>100</LoadOrder>
@@ -50,9 +56,6 @@
                 <UIScripts>
                     <Item>ui/readable-tooltips.js</Item>
                 </UIScripts>
-                <ImportFiles>
-                    <Item>ui/readable-tooltips.js</Item>
-                </ImportFiles>
             </Actions>
         </ActionGroup>
     </ActionGroups>

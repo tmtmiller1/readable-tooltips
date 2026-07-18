@@ -7,6 +7,33 @@ matching section below by `release.sh`.
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-07-18
+
+The offset actually works in-game now, and it no longer clips the tech/civic
+"what you unlocked" popup.
+
+### Fixed
+- **The mod now applies to your game at all.** It was missing
+  `<AffectsSavedGames>0</AffectsSavedGames>`, so the game treated it as
+  save-affecting and silently skipped it when loading an existing save — the
+  UIScript never ran. Added the flag; the offset applies to any session,
+  including saves it wasn't created with.
+- **Tech/civic "what you unlocked" tooltips no longer clip.** Earlier versions
+  offset the `#tooltip-root` tooltips with a CSS `transform`, which is applied
+  *after* the game's on-screen clamp and shoved the tall unlock popup off the
+  edge, cutting off its top-left corner.
+
+### Changed
+- **The offset is now applied before the clamp, in JS.** `readable-tooltips.js`
+  wraps `TooltipController.reposition` and widens the cursor gap on the cursor
+  anchor *before* the controller's edge-flip and on-screen clamp run, so every
+  tooltip clears the cursor and is re-fitted on-screen in every corner — no
+  post-clamp shove, no clip. This replaces the old CSS approach, whose transform
+  GameFace could not reliably apply to the animated `#tooltips` element anyway.
+- **Two offset tiers.** Reward/decision tooltips over the world get the full gap;
+  tooltips on the persistent HUD sub-system dock (tech/civic/wonders/legacies)
+  get a gentler gap so they stay close to the small UI they describe.
+
 ## [1.0.3] - 2026-07-08
 
 Readability fix for the tech/civic "what you unlocked" popup.
