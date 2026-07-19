@@ -94,7 +94,7 @@ tooltip system the first release did not cover.
   cursor.** These use the game's second cursor-following tooltip system (the
   `data-tooltip-content` / `#tooltip-root` controller), which the first release
   did not touch. That system adds only a fixed 24px cursor offset, so at higher
-  UI scales — where the cursor is larger than 24px — the tooltip's corner still
+  UI scales (where the cursor is larger than 24px) the tooltip's corner still
   landed under the pointer. The offset now covers this system too, flip-aware via
   its `tooltip-align--*` classes, so it composes with the game's own inline
   positioning and always pushes the tooltip away from the cursor.
@@ -115,7 +115,7 @@ First release. Every tooltip now sits clear of the cursor.
   always pushed away from the cursor and never back under it.
 - **Coexists with other tooltip mods.** The offset is applied to the game's
   shared tooltip slot without reading or overriding any tooltip's own styling,
-  and with no `!important` rules, so modded tooltips render exactly as their
-  authors intended — only their position shifts.
+  and with no `!important` rules, so modded tooltips render unchanged; only
+  their position shifts.
 - **Single tuning knob.** One `OFFSET` value in `ui/readable-tooltips.js`
   controls how far tooltips sit from the cursor.

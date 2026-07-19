@@ -26,8 +26,8 @@ So we target that active-tooltip slot **structurally**:
 ```
 
 …and `transform: translate()` it away from the cursor. We touch only the outer
-positioning transform of the shared slot — never any tooltip's classes, font,
-content, or internal layout — so every tooltip keeps its exact look and only its
+positioning transform of the shared slot, never any tooltip's classes, font,
+content, or internal layout, so every tooltip keeps its exact look and only its
 position shifts.
 
 ### Flip-aware
@@ -59,16 +59,16 @@ const OFFSET = "1.25rem"; // how far to push the tooltip off the cursor
 The game's ui-next tooltips use `16px` (~`0.9rem`); `1.25rem` clears the cursor
 body a little more comfortably. Raise for more spacing, lower for less.
 
-## Mod-conflict safety (100% compatible by construction)
+## Compatibility with other mods
 
 - **Structural selector, not classes/content.** We match the manager's active
   slot (`#tooltips > div > *`), so we hit whatever tooltip is live without
-  depending on — or overriding — any mod's own tooltip classes or styles.
+  depending on or overriding any mod's own tooltip classes or styles.
 - **Only the outer position changes.** No font, size, color, padding, or
   internal layout is touched, so a modded tooltip renders identically, just
   shifted off the cursor.
 - **No `!important`.** The `<style>` is appended to `document.head` after the
-  base game CSS, so load order alone wins the cascade — while leaving any mod
+  base game CSS, so load order alone wins the cascade, while leaving any mod
   free to override tooltip positioning if it ever wants to.
 - **Unique everywhere.** Mod id, package name, ActionGroup ids, the injected
   `<style>` id (`readable-tooltips-style`), and the `LOC_MOD_READABLE_TOOLTIPS_*`
