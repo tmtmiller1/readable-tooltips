@@ -1,86 +1,60 @@
 # Readable Tool Tips
 
-A tiny Civilization VII UI mod that nudges **every** active game tooltip a small
-distance away from the cursor, so hover text is no longer tucked under the
-pointer and hidden. Pure spacing — no font, color, size, or content change.
+A small Civilization VII UI mod that moves cursor-following tooltips a little further from the pointer, so hover text
+is not tucked under the cursor. Position only — no font, color, size, or content change.
 
-## The problem
+## What it covers
 
-The game's main tooltip system (`fxs-tooltip` via `TooltipManagerSingleton`)
-places the tooltip's **top-left corner right at the cursor position** —
-`position.x = this.x` (cursor x), with no pointer offset at all
-([tooltip-manager.js `updateTooltipPosition`](../../civilization_vii_1.4.1_gamefiles/Resources/Base/modules/core/ui/tooltips/tooltip-manager.js)).
-So the top-left of the tooltip sits directly under the cursor body and gets
-obscured. (The game's *other*, ui-next tooltip system already offsets by
-`pointerOffsetX/Y: 16` — this one just doesn't.)
+Civilization VII 1.5.0 draws cursor tooltips three ways, and the mod widens the cursor gap in each:
 
-## The fix
+| Tooltips | Examples | Game gap | With the mod |
+|---|---|---|---|
+| `#tooltip-root` (`TooltipController`) | yields, dock buttons, diplomacy ribbon, minimap, decisions, main menu | 24px | 36px (28px on the dock) |
+| `#tooltips` (`TooltipManager`) | relationship and war-support icons, trade routes, peace deals, production items | 22px | 34px |
+| ui-next `PlotTooltip` | hovering map tiles | 22px | 34px |
 
-Every hover tooltip — base **and** the custom tooltips other mods build
-(bz-city-tooltip, dan-city-yields, tech-civic, …) — flows through that same
-manager and lands as the single child of its root `<div>` inside `#tooltips`.
-So we target that active-tooltip slot **structurally**:
+Near a screen edge each system flips its tooltip to the left of or above the cursor. The mod adds its gap on the side
+the tooltip actually opened, so a flipped tooltip is pushed further away from the cursor, and every tooltip stays
+on-screen in every corner. Tooltips anchored to an element (not the cursor), such as tech-tree cards, are left alone.
 
-```
-#tooltips > div > *
-```
+## How it works
 
-…and `transform: translate()` it away from the cursor. We touch only the outer
-positioning transform of the shared slot, never any tooltip's classes, font,
-content, or internal layout, so every tooltip keeps its exact look and only its
-position shifts.
+The mod widens the gap inside each system's own placement code, before that system's on-screen clamp runs, so the
+game's edge-flip and clamp fit the offset tooltip on-screen:
 
-### Flip-aware
-
-When a tooltip would run off-screen the manager flips it and adds a `.right`
-and/or `.above` class so it renders to the left of / above the cursor. We read
-those same classes and mirror our offset in all four flip states, so the tooltip
-is always pushed *away* from the cursor, never back under it.
-
-### Why transform, not margin
-
-The manager re-positions the tooltip's root wrapper every frame from the
-tooltip's measured `offsetWidth/Height`, which excludes margins. A margin would
-desync that on-screen clamp/flip math; a `transform: translate()` moves the
-rendered box by an exact amount without changing the measured layout box, so the
-game's own edge-clamping keeps working. The base game only ever sets
-`transform: translateX(0rem)` on the tooltip element (a no-op) and drives real
-positioning through the root wrapper, so overriding the element transform here
-is safe.
+- `TooltipController.reposition` is wrapped to push the cursor anchor for the duration of the call.
+- `TooltipManager.updateTooltipPosition` is wrapped the same way, and the manager's resize observer is rebound to the
+  wrapped method.
+- `PlotTooltip` is re-registered through ui-next's `ComponentRegistry` override mechanism as the same component with a
+  wider `offset`.
 
 ## Tuning
 
-One knob at the top of `ui/readable-tooltips.js`:
+Two knobs at the top of `ui/readable-tooltips.js`:
 
 ```js
-const OFFSET = "1.25rem"; // how far to push the tooltip off the cursor
+const WORLD_OFFSET_PX = 12; // world/popup/map tooltips
+const HUD_OFFSET_PX = 4;    // persistent HUD sub-system-dock tooltips — gentler
 ```
 
-The game's ui-next tooltips use `16px` (~`0.9rem`); `1.25rem` clears the cursor
-body a little more comfortably. Raise for more spacing, lower for less.
+Raise for more spacing, lower for less.
 
 ## Compatibility with other mods
 
-- **Structural selector, not classes/content.** We match the manager's active
-  slot (`#tooltips > div > *`), so we hit whatever tooltip is live without
-  depending on or overriding any mod's own tooltip classes or styles.
-- **Only the outer position changes.** No font, size, color, padding, or
-  internal layout is touched, so a modded tooltip renders identically, just
-  shifted off the cursor.
-- **No `!important`.** The `<style>` is appended to `document.head` after the
-  base game CSS, so load order alone wins the cascade, while leaving any mod
-  free to override tooltip positioning if it ever wants to.
-- **Unique everywhere.** Mod id, package name, ActionGroup ids, the injected
-  `<style>` id (`readable-tooltips-style`), and the `LOC_MOD_READABLE_TOOLTIPS_*`
-  localization tags are all unique across the mods corpus.
+- Each wrapper calls the original method and restores every field it touches, so it composes with other mods that
+  patch the same methods.
+- The `PlotTooltip` override wraps whatever plot tooltip is registered, including another mod's replacement (for
+  example QD Improved Plot Tooltip or Map Trix), at the same priority, so a plot-tooltip mod that loads later still
+  replaces it; the wrapper then re-applies itself on top of that mod's version. The offset is a fixed target, so
+  layered wrappers never stack it, and a larger gap set by another mod is kept.
+- No CSS, no `!important`, no base-game files replaced.
+- `AffectsSavedGames` is 0, so the mod applies to existing saves.
 
 ## How it loads
 
-`ui/readable-tooltips.js` idempotently injects one small `<style>` element into
-`document.head`. It is registered in both the **shell** (main-menu) and **game**
-scopes so front-end and in-game tooltips are both covered.
+`ui/readable-tooltips.js` is registered in both the shell (main menu) and game scopes. Every patch is idempotent and
+guarded: if a future game update moves a method, that one offset is skipped and the UI keeps working.
 
-## Reversibility
+## Tests
 
-Pure CSS transform, no base-game files replaced, no gameplay effect. Disable the
-mod for vanilla tooltip positioning.
+`npm run verify` runs lint, a syntax check, and unit tests for the offset tiers, flip direction, and plot offset.

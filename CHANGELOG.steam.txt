@@ -1,0 +1,61 @@
+Steam Workshop change notes, one block per release, newest first.
+Generated from CHANGELOG.md by scripts/steam-changelog.mjs; release.sh uploads the block for the version it builds.
+To fix an old Workshop entry, paste the text under its ==== line into that entry's Edit box on the change-notes page.
+A block edited by hand is kept as-is. Delete a block to regenerate it from CHANGELOG.md.
+
+==== 1.0.5 | 2026-09-21 | src 4e7ad0431367 | gen 7aa1d3e46dbc ====
+[b]Version 1.0.5 · 21 September 2026[/b]
+Updated for Civilization VII 1.5.0. Every tooltip that follows the cursor now sits clear of it, including the new map-tile tooltip that 1.5.0 introduced.
+
+[b]Added[/b]
+• [b]Map-tile tooltips.[/b] 1.5.0 replaced the tooltip you see when hovering over a map tile, and the new one sits close to the cursor. The mod now moves it 12px further away. This also works when another mod replaces the map-tile tooltip, such as QD Improved Plot Tooltip.
+• [b]Relationship, trade-route, peace-deal and production tooltips.[/b] These get the same extra 12px. Near a screen edge, where the game flips them to the other side of the cursor, they used to sit only 5-6px from it; they now sit 17-18px away.
+
+[b]Fixed[/b]
+• [b]Tooltips near the right or bottom edge of the screen.[/b] When the game flipped a tooltip to the left of or above the cursor, the mod still pushed it down and to the right, back toward the cursor. In the bottom-right corner it covered the cursor. The extra space is now added on the side the tooltip actually opens.
+
+==== 1.0.4 | 2026-07-18 | src 5ae82ec989e9 | gen 06d665a7ae18 ====
+[b]Version 1.0.4 · 18 July 2026[/b]
+The offset now works in game, and it no longer cuts off the tech and civic “what you unlocked” popup.
+
+[b]Fixed[/b]
+• [b]The mod now works in saved games.[/b] It was missing a setting that marks it as safe for existing saves, so the game skipped it whenever you loaded a save.
+• [b]Tech and civic “what you unlocked” tooltips no longer get cut off.[/b] The old offset was applied after the game had already fitted the tooltip on screen, which pushed the tall unlock popup past the edge.
+
+[b]Changed[/b]
+• [b]Tooltips are moved before the game fits them on screen.[/b] The game then flips and fits the moved tooltip itself, so every tooltip clears the cursor and stays fully on screen in every corner.
+• [b]Two spacing levels.[/b] Tooltips over the map and in popups get the full gap. Tooltips on the tech, civic, wonders and legacies buttons get a smaller gap, so they stay close to the button they describe.
+
+==== 1.0.3 | 2026-07-08 | src e722c99446e3 | gen 1c3905f15a60 ====
+[b]Version 1.0.3 · 8 July 2026[/b]
+Fixes the tech and civic “what you unlocked” popup.
+
+[b]Fixed[/b]
+• [b]The “what you unlocked” popup no longer has its top-left corner cut off.[/b] When a tech or civic finished, hovering a newly unlocked item showed a tooltip with its corner clipped. The mod was moving that tooltip after the game had already fitted it on screen, which pushed the tall popup past the edge.
+
+[b]Changed[/b]
+• [b]The mod now moves only the map, unit and world hover tooltips.[/b] These are the ones the game places right at the cursor. Yield and decision tooltips are left at the game's own spacing, which already keeps them 24px from the cursor.
+
+==== 1.0.2 | 2026-07-06 | src a31f142b218f | gen ddd77bf26136 ====
+[b]Version 1.0.2 · 6 July 2026[/b]
+Maintenance release. Nothing changes in game: the mod's code is identical to 1.0.1.
+
+[b]Added[/b]
+• [b]Automated testing.[/b] Tests and code checks now run before each release, to catch mistakes before they reach you. None of this is included in the download.
+
+==== 1.0.1 | 2026-07-04 | src 058ecdfe51ff | gen 1bf956177bdc ====
+[b]Version 1.0.1 · 4 July 2026[/b]
+Yield and decision tooltips now clear the cursor too.
+
+[b]Fixed[/b]
+• [b]Yield amounts and decision and reward previews are no longer hidden under the cursor.[/b] These tooltips work differently from the ones the first release covered. The game keeps them only 24px from the cursor, so at larger UI scales, where the cursor is bigger than 24px, their corner still sat under the pointer. The mod now moves them away from the cursor too, including when they flip near a screen edge.
+
+==== 1.0.0 | 2026-07-04 | src 49cba31a2826 | gen ad606b3d8ec0 ====
+[b]Version 1.0.0 · 4 July 2026[/b]
+First release. Every tooltip now sits clear of the cursor.
+
+[b]Added[/b]
+• [b]Offset every tooltip off the cursor.[/b] The base game's main tooltip system pins a tooltip's top-left corner directly at the cursor, so the first line of text hides under the pointer. Readable Tool Tips translates whatever tooltip is active a small, consistent distance away from the cursor so its text is always clear and readable. Pure position change — no font, size, color, or content is altered.
+• [b]Flip-aware offset.[/b] When a tooltip flips to the left of or above the cursor near a screen edge, the offset direction flips with it, so the tooltip is always pushed away from the cursor and never back under it.
+• [b]Coexists with other tooltip mods.[/b] The offset is applied to the game's shared tooltip slot without reading or overriding any tooltip's own styling, and with no !important rules, so modded tooltips render unchanged; only their position shifts.
+• [b]Single tuning knob.[/b] One OFFSET value in ui/readable-tooltips.js controls how far tooltips sit from the cursor.

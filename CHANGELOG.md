@@ -7,6 +7,24 @@ matching section below by `release.sh`.
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-09-21
+
+Updated for Civilization VII 1.5.0. Every tooltip that follows the cursor now sits clear of it, including the new
+map-tile tooltip that 1.5.0 introduced.
+
+### Added
+- **Map-tile tooltips.** 1.5.0 replaced the tooltip you see when hovering over a map tile, and the new one sits close
+  to the cursor. The mod now moves it 12px further away. This also works when another mod replaces the map-tile
+  tooltip, such as QD Improved Plot Tooltip.
+- **Relationship, trade-route, peace-deal and production tooltips.** These get the same extra 12px. Near a screen
+  edge, where the game flips them to the other side of the cursor, they used to sit only 5-6px from it; they now sit
+  17-18px away.
+
+### Fixed
+- **Tooltips near the right or bottom edge of the screen.** When the game flipped a tooltip to the left of or above
+  the cursor, the mod still pushed it down and to the right, back toward the cursor. In the bottom-right corner it
+  covered the cursor. The extra space is now added on the side the tooltip actually opens.
+
 ## [1.0.4] - 2026-07-18
 
 The offset actually works in-game now, and it no longer clips the tech/civic

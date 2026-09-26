@@ -37,7 +37,8 @@ const BROWSER_GLOBALS = {
   requestAnimationFrame: "readonly",
   cancelAnimationFrame: "readonly",
   MutationObserver: "readonly",
-  CustomEvent: "readonly"
+  CustomEvent: "readonly",
+  ResizeObserver: "readonly"
 };
 
 export default [

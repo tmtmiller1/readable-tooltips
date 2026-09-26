@@ -6,12 +6,12 @@ That is the whole mod. It changes [b]nothing[/b] about how tooltips look — not
 
 [b]Why it exists[/b]
 
-The game runs two tooltip systems. One of them already offsets its tooltips from the cursor; the main one — the one behind most plot, unit, yield, and building hovers — does not, and drops the tooltip's top-left corner directly under the pointer. On some cursors and at some hover spots that tucks the first line or two out of sight. Readable Tool Tips gives that main system the same cursor offset the other one already has.
+The game draws cursor tooltips three ways: the yield, dock, ribbon and menu hovers; the relationship, trade-route, peace-deal and production hovers; and, since update 1.5.0, the hover over map tiles. All three sit only 22-24px from the pointer, and near a screen edge some flip to within a few pixels of it. On most cursors that tucks the first line out of sight. Readable Tool Tips widens the gap in all three.
 
 [b]What it does[/b]
 
 [list]
-[*]Every active tooltip is translated a small distance off the pointer so its text is no longer hidden behind it.
+[*]Every cursor-following tooltip, including the map-tile tooltip, sits a little further off the pointer so its text is clear of it.
 [*]When a tooltip flips to the left of or above the cursor near a screen edge, the offset flips with it, so the tooltip is always pushed [i]away[/i] from the cursor, never back under it, in every corner.
 [*]No font, size, color, spacing, or content change of any kind. Tooltips read exactly as the game (or another mod) draws them, just shifted off the pointer.
 [*]A single offset value controls how far tooltips sit from the cursor, tuned in the mod's one small script.
@@ -19,7 +19,7 @@ The game runs two tooltip systems. One of them already offsets its tooltips from
 
 [b]Works alongside other mods[/b]
 
-Readable Tool Tips runs alongside other tooltip mods (city-yield tooltips, tech/civic tooltips, plot tooltip overhauls, and so on). It works by offsetting the game's shared tooltip slot, the single place every tooltip, base or modded, is shown, without reading or overriding any tooltip's own styling. A modded tooltip displays exactly as before; only its position shifts. There are no [i]!important[/i] overrides, so any mod that wants to control tooltip positioning still can.
+Readable Tool Tips runs alongside other tooltip mods (city-yield tooltips, tech/civic tooltips, plot tooltip overhauls such as QD Improved Plot Tooltip, and so on). It adjusts only where each tooltip is placed, inside the game's own placement code, and leaves every tooltip's styling and contents alone. A replacement map-tile tooltip from another mod keeps its look and gets the same wider gap, whichever mod loads first.
 
 [b]What it does not do[/b]
 

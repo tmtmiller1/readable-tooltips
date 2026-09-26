@@ -5,13 +5,14 @@
 # Output: dist/readable-tooltips-vX.Y.Z.zip  (X.Y.Z read from the modinfo <Version>)
 #
 # What this does:
-#   1. Mirrors the mod source into dist/readable-tooltips/ (excluding dev cruft).
-#   2. Ships readable JS (no minification; transparent source is a core property).
-#   3. Verifies the modinfo has Version + Authors set to non-default values.
-#   4. Zips the result with `readable-tooltips/` as the zip root (Steam Workshop
+#   1. Runs the quality gate (npm run release:gate: lint + syntax check + tests).
+#   2. Mirrors the mod source into dist/readable-tooltips/ (excluding dev cruft).
+#   3. Ships readable JS (no minification; transparent source is a core property).
+#   4. Verifies the modinfo has Version + Authors set to non-default values.
+#   5. Zips the result with `readable-tooltips/` as the zip root (Steam Workshop
 #      needs the modinfo at zip root, not inside a wrapper folder).
-#   5. Audits the zip against an allow-list so no docs/dev files leak in.
-#   6. Renders the 1024x1024 Workshop preview and writes steamcmd .vdf manifests.
+#   6. Audits the zip against an allow-list so no docs/dev files leak in.
+#   7. Renders the 1024x1024 Workshop preview and writes steamcmd .vdf manifests.
 #
 # Run from the mod source directory.
 
@@ -55,6 +56,14 @@ case "$VERSION" in
         ;;
 esac
 
+# Quality gate: never package a red build. `release:gate` runs lint + syntax check + tests.
+# Set SKIP_VERIFY=1 to bypass (e.g. an emergency hotfix where the gate is knowingly red).
+if [ "${SKIP_VERIFY:-0}" != "1" ] && [ -f "$SRC_DIR/package.json" ]; then
+    echo "release: running 'npm run release:gate' (set SKIP_VERIFY=1 to skip)..."
+    ( cd "$SRC_DIR" && npm run release:gate ) \
+        || { echo "release: 'npm run release:gate' FAILED — aborting."; exit 1; }
+fi
+
 # ── Steam Workshop published file id ──────────────────────────────────────
 # The publishedfileid is what makes steamcmd UPDATE the existing Workshop item
 # instead of creating a duplicate. It must survive the `rm -rf dist` below, so we
@@ -92,7 +101,7 @@ rm -rf "$DIST_DIR"
 mkdir -p "$TARGET_DIR"
 
 echo "==> Mirroring $SRC_DIR/ → $TARGET_DIR/ (excluding dev cruft)"
-rsync -a --exclude='.git' --exclude='.gitignore' --exclude='.DS_Store' --exclude='dist' \
+rsync -a --exclude='CHANGELOG.steam.txt' --exclude='scripts' --exclude='.git' --exclude='.gitignore' --exclude='.DS_Store' --exclude='dist' \
     --exclude='release.sh' --exclude='*.bak' --exclude='node_modules' \
     --exclude='docs' --exclude='reports' --exclude='steam_workshop_id.txt' --exclude='CONTRIBUTING.md' \
     --exclude='tests' --exclude='package.json' --exclude='eslint.config.js' \
@@ -152,41 +161,11 @@ ABS_CONTENT="$(cd "$TARGET_DIR" && pwd)"
 ABS_PREVIEW=""
 [ -f "$PREVIEW_OUT" ] && ABS_PREVIEW="$(cd "$DIST_DIR" && pwd)/preview.png"
 
-# Change note: pull the current version's section out of CHANGELOG.md (Keep a
-# Changelog format) and render its bullet lines as a Steam BBCode list. Falls
-# back to a generic note if CHANGELOG.md or the matching section is absent.
-CHANGELOG_FILE="$SRC_DIR/CHANGELOG.md"
-CHANGENOTE="v${VERSION} release."
-VERSION_RE="$(printf '%s' "$VERSION" | sed -E 's/[][(){}.^$*+?|\\]/\\&/g')"
-if [ -f "$CHANGELOG_FILE" ]; then
-    BULLETS="$(awk -v verre="$VERSION_RE" '
-        function flush() { if (cur != "") { print cur; cur = "" } }
-        $0 ~ ("^## \\[" verre "\\]") { grab = 1; next }
-        grab && /^## / { flush(); exit }
-        !grab { next }
-        /^###/ { next }
-        /^[[:space:]]*[-*][[:space:]]+/ {
-            flush()
-            line = $0
-            sub(/^[[:space:]]*[-*][[:space:]]+/, "", line)
-            cur = line
-            next
-        }
-        /^[[:space:]]*$/ { next }
-        cur != "" {
-            line = $0
-            sub(/^[[:space:]]+/, "", line)
-            cur = cur " " line
-        }
-        END { flush() }
-    ' "$CHANGELOG_FILE" \
-        | sed -E 's/^/[*]/; s/\*\*//g; s/`//g' \
-        | tr '\n' ' ')"
-    if [ -n "$BULLETS" ]; then
-        CHANGENOTE="$(printf '[b]v%s[/b] [list]%s[/list]' "$VERSION" "$BULLETS" \
-            | sed -E 's/\\/\\\\/g; s/"/\\"/g')"
-    fi
-fi
+# Change note: this release's block from CHANGELOG.steam.txt, which scripts/steam-changelog.mjs keeps in step with
+# CHANGELOG.md (that script documents Steam's change-note formatting rules). The block is VDF-safe: no straight
+# double quotes, no backslashes. Edit CHANGELOG.steam.txt to reword a note; a hand-edited block is kept.
+CHANGENOTE="$(node scripts/steam-changelog.mjs note "$VERSION")" \
+    || { echo "error: could not build the Steam change note (see above)"; exit 1; }
 
 write_workshop_vdf() {
     local out_path="$1"

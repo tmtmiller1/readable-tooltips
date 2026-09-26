@@ -6,7 +6,7 @@ That is the whole mod. It changes nothing about how tooltips look — not the fo
 
 [b]What it does:[/b]
 [list]
-[*]Pushes every active tooltip clear of the cursor so text is no longer hidden behind the pointer.
+[*]Pushes every cursor-following tooltip, including the map-tile tooltip, clear of the cursor so its text is easy to read.
 [*]Flips the offset near screen edges (left/above the cursor) so tooltips always sit away from the pointer and stay on-screen.
 [*]Position only — no font, size, color, or content change of any kind.
 [*]One simple offset knob controls how far tooltips sit from the cursor.
@@ -14,8 +14,7 @@ That is the whole mod. It changes nothing about how tooltips look — not the fo
 
 [b]Works with other mods:[/b]
 [list]
-[*]Offsets the game's shared tooltip slot without reading or overriding any tooltip's own styling, so modded tooltips (city yields, tech/civic, plot overhauls, ...) render exactly as their authors intended — only their position shifts.
-[*]No [i]!important[/i] overrides; any mod can still control tooltip positioning.
+[*]Adjusts only where tooltips are placed, never their styling, so modded tooltips (city yields, tech/civic, plot overhauls such as QD Improved Plot Tooltip, ...) render exactly as their authors intended — only their position shifts.
 [/list]
 
 [b]What it does not do:[/b]
