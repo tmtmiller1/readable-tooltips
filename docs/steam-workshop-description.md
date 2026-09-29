@@ -38,6 +38,8 @@ Readable Tool Tips runs alongside other tooltip mods (city-yield tooltips, tech/
 [*]Enable Readable Tool Tips from Additional Content in-game.
 [/list]
 
+[b]For modders:[/b] This mod is developed with [url=https://github.com/tmtmiller1/civilizationvii_tower-bench]Tower Bench[/url], a free, open-source test bench for Civilization VII mods. It connects to a running game from your browser or the command line: inspect and change the map with every write verified and undoable, diff the world between two turns, prove your deployed code is what the game runs, find which mod causes a crash, and see which copy of each mod is actually loaded.
+
 [b]Credits[/b]
 
 [list]
