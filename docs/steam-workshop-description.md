@@ -38,10 +38,18 @@ Readable Tool Tips runs alongside other tooltip mods (city-yield tooltips, tech/
 [*]Enable Readable Tool Tips from Additional Content in-game.
 [/list]
 
-[b]For modders:[/b] This mod is developed with [url=https://github.com/tmtmiller1/civilizationvii_tower-bench]Tower Bench[/url], a free, open-source test bench for Civilization VII mods. It connects to a running game from your browser or the command line: inspect and change the map with every write verified and undoable, diff the world between two turns, prove your deployed code is what the game runs, find which mod causes a crash, and see which copy of each mod is actually loaded.
-
-[b]Credits[/b]
-
+[h2]Source and documentation[/h2]
 [list]
-[*]Tower, for design and Civilization VII implementation.
+[*][b]What's new:[/b] [url=https://github.com/tmtmiller1/readable-tooltips/releases/latest]the latest release notes and a download[/url]
+[*][b]Full documentation:[/b] [url=https://github.com/tmtmiller1/readable-tooltips/blob/main/README.md]how the mod works[/url]
+[/list]
+[h2]For modders[/h2]
+This mod is developed with [url=https://github.com/tmtmiller1/civilizationvii_tower-bench]Tower Bench[/url], a free, open-source test bench for Civilization VII mods. It connects to a running game from your browser or the command line: inspect and change the map with every write verified and undoable, diff the world between two turns, prove your deployed code is what the game runs, find which mod causes a crash, and see which copy of each mod is actually loaded.
+[h2]Credits[/h2]
+[list]
+[*][b]Tower[/b], for design and Civilization VII implementation.
+[/list]
+[h2]Special Thanks[/h2]
+[list]
+[*][b]Potato McWhisky[/b], for teaching me to love again, Civilization-wise (Civ VI), after growing up as a Civilization II, IV, and V player. Making this mod is an act of faith that the community will eventually help make Civilization VII as good as the previous entries.
 [/list]
