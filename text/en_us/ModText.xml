@@ -5,7 +5,7 @@
             <Text>Readable Tool Tips</Text>
         </Row>
         <Row Tag="LOC_MOD_READABLE_TOOLTIPS_DESCRIPTION">
-            <Text>Nudges every game tooltip a small distance away from the cursor so hover text is no longer hidden behind the pointer. Pure spacing — no font or content change, works with other tooltip mods, fully reversible.</Text>
+            <Text>Moves every game tooltip a little further from the cursor so hover text is not hidden under the pointer. Only the spacing changes: fonts and contents stay as they are, and it works alongside other tooltip mods.</Text>
         </Row>
     </EnglishText>
 </Database>

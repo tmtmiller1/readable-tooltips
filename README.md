@@ -1,7 +1,7 @@
 # Readable Tool Tips
 
 A small Civilization VII UI mod that moves cursor-following tooltips a little further from the pointer, so hover text
-is not tucked under the cursor. Position only — no font, color, size, or content change.
+is not tucked under the cursor. It only moves tooltips; fonts, colors, sizes and contents are untouched.
 
 ## What it covers
 
@@ -34,7 +34,7 @@ Two knobs at the top of `ui/readable-tooltips.js`:
 
 ```js
 const WORLD_OFFSET_PX = 12; // world/popup/map tooltips
-const HUD_OFFSET_PX = 4;    // persistent HUD sub-system-dock tooltips — gentler
+const HUD_OFFSET_PX = 4;    // HUD sub-system-dock tooltips, a smaller gap
 ```
 
 Raise for more spacing, lower for less.

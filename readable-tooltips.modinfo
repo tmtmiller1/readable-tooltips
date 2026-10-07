@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Mod element's version="1" is the ModInfo SCHEMA version, NOT the
+<!-- version="1" on the Mod element is the ModInfo schema version, not the
      release version. The release version is <Properties><Version> below. -->
 <Mod id="readable-tooltips" version="1" xmlns="ModInfo">
     <Properties>
@@ -9,10 +9,10 @@
         <SpecialThanks>The demographics mod, whose per-tooltip readability nudge this generalizes to the whole game.</SpecialThanks>
         <Package>ReadableTooltipsMod</Package>
         <PackageSortIndex>1000</PackageSortIndex>
-        <!-- Cosmetic UI-only mod: no gameplay/database change, so it can be
-             injected into ANY session including existing saved games. Without
-             this the game treats the mod as save-affecting and silently skips it
-             when loading a save it wasn't created with. -->
+        <!-- UI-only mod with no gameplay or database change, so it can load into
+             any session, including existing saves. Without this flag the game
+             treats the mod as save-affecting and skips it when loading a save it
+             wasn't created with. -->
         <AffectsSavedGames>0</AffectsSavedGames>
         <Version>1.0.5</Version>
     </Properties>
@@ -25,8 +25,8 @@
         </Criteria>
     </ActionCriteria>
     <ActionGroups>
-        <!-- Shell scope: main-menu / front-end tooltips. High LoadOrder so our
-             override lands after the base tooltip stylesheet. -->
+        <!-- Shell scope: main-menu tooltips. High LoadOrder so the script runs
+             after the base tooltip code it wraps. -->
         <ActionGroup id="readable-tooltips-shell" scope="shell" criteria="always">
             <Properties>
                 <LoadOrder>100</LoadOrder>
@@ -40,11 +40,10 @@
                 </UIScripts>
             </Actions>
         </ActionGroup>
-        <!-- Game scope: the in-game `#tooltip-root` tooltips (yield amounts,
-             decision/reward previews, tech/civic unlock popup). readable-tooltips.js
-             wraps TooltipController.reposition to widen the cursor gap BEFORE the
-             controller's on-screen clamp, so tooltips clear the cursor yet still
-             re-fit on-screen (no clipped tech/civic popup). See the file header. -->
+        <!-- Game scope: the in-game tooltips. readable-tooltips.js widens the
+             cursor gap inside each tooltip system's own placement code, before
+             its on-screen clamp, so tooltips clear the cursor and still fit
+             on-screen. See the README. -->
         <ActionGroup id="readable-tooltips-game" scope="game" criteria="always">
             <Properties>
                 <LoadOrder>100</LoadOrder>

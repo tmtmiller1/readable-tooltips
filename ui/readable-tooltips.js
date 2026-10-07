@@ -1,65 +1,24 @@
 /**
- * Readable Tool Tips
- * --------------------------------------------------------------------------
- * Pushes the game's cursor-following tooltips a little further off the cursor
- * so their first characters aren't tucked under the pointer — without ever
- * pushing a tooltip off-screen.
+ * Readable Tool Tips: pushes the game's cursor-following tooltips a little
+ * further off the cursor so their first characters aren't tucked under the
+ * pointer, without pushing any tooltip off-screen.
  *
- * WHICH TOOLTIPS (Civilization VII 1.5.0 draws cursor tooltips three ways)
- *   1. TooltipController (container `#tooltip-root`): the `data-tooltip-content`
- *      hovers — yield amounts, dock buttons, diplomacy ribbon, minimap, decision/
- *      reward previews, main-menu buttons. Game gap: 24px.
- *   2. TooltipManager (container `#tooltips`): the `data-tooltip-style` hovers —
- *      relationship/war-support icons, trade routes, peace deals, production
- *      items, advanced start. Game gap: 22px to the visible frame.
- *   3. ui-next PlotTooltip: the hover over map tiles. Game gap: 22px.
- *   Tooltips anchored to an element (not the cursor) are left alone.
- *
- * HOW — and why it can't clip
- *   We do NOT offset with CSS. A CSS `transform` lands AFTER each system's
- *   on-screen clamp, so on a tooltip pinned to a screen edge it shoves the box
- *   back off the edge and clips it (the old tech/civic unlock-popup regression).
- *   Instead we widen the cursor gap BEFORE the clamp, in each system's own
- *   placement code, so the game's own edge-flip and clamp run on the offset
- *   anchor:
- *   1. wrap TooltipController.reposition (cursor path only);
- *   2. wrap TooltipManager.updateTooltipPosition;
- *   3. re-register PlotTooltip through ui-next's ComponentRegistry override
- *      mechanism, passing a wider `offset` prop to the game's own component.
- *
- * DIRECTION
- *   The gap is added on the side the tooltip actually opened. A tooltip flipped
- *   to the left of (or above) the cursor near a screen edge is pushed further
- *   left (or up) — pushing it right/down would slide it back under the cursor.
- *
- * TWO TIERS
- *   Tooltips over the world / popups get the full gap; tooltips anchored to the
- *   persistent HUD sub-system dock (tech/civic/wonders/legacies) get a gentler
- *   gap so they don't drift far from the small UI they describe.
- *
- * COMPATIBILITY (an "ultra-compatible" patch)
- *   - No gameplay/database change, so the modinfo sets `AffectsSavedGames` to 0
- *     and it applies to any session including existing saved games.
- *   - Each wrapper calls the original and restores the fields it touches, so it
- *     composes with other mods and never leaves a system in a modified state.
- *   - The PlotTooltip override wraps whatever factory is registered (including
- *     another mod's override, e.g. QD Improved Plot Tooltip) at the SAME
- *     priority, so a later plot-tooltip mod can still replace it, and then
- *     re-wraps that mod's version (capped, so two re-wrapping mods cannot loop).
- *   - Fully guarded: a future engine change can only cost an offset, never break
- *     the UI context.
+ * The gap is widened in JS, inside each tooltip system's own placement code and
+ * before its on-screen clamp, rather than with CSS: a transform lands after the
+ * clamp and shoved edge-pinned tooltips (the tech/civic unlock popup) off the
+ * edge. The gap goes on the side the tooltip actually opened, so a flipped
+ * tooltip moves further left or up instead of back under the cursor.
  */
 
-// Extra cursor gap, in screen px, ADDED on top of each system's built-in gap.
-// Two knobs: raise for more spacing, lower for less.
-const WORLD_OFFSET_PX = 12; // world/popup/map tooltips (sit under the cursor)
-const HUD_OFFSET_PX = 4;    // persistent HUD sub-system-dock tooltips — gentler
+// Extra cursor gap in screen px, on top of each system's built-in gap.
+const WORLD_OFFSET_PX = 12; // world/popup/map tooltips
+const HUD_OFFSET_PX = 4;    // HUD sub-system-dock tooltips, a smaller gap
 
 // The game's own PlotTooltip passes `offset: 22` to its ui-next Tooltip root.
 const PLOT_TOOLTIP_BASE_OFFSET_PX = 22;
 
-// A hovered element inside this container marks a persistent-HUD tooltip, which
-// gets the gentler HUD gap. Extend the selector if other HUD areas should too.
+// Hovered elements inside this container get the HUD gap; extend the selector
+// if other HUD areas should too.
 const HUD_CONTEXT_SELECTOR = ".sub-system-dock";
 
 const REPOSITION_PATCHED = "__readableTooltipsRepositionPatched";
@@ -70,21 +29,17 @@ const PLOT_PATCHED = "__readableTooltipsPlotPatched";
 // script runs; poll this long for it before giving up.
 const PLOT_REGISTER_POLL_MS = 500;
 const PLOT_REGISTER_POLL_TRIES = 120;
-// Most times the PlotTooltip wrapper re-applies itself after another mod replaces it.
+// how many times the PlotTooltip wrapper may re-apply itself after another mod replaces it
 const PLOT_MAX_WRAPS = 8;
 
-/**
- * How far to push a tooltip whose hovered element is `context`.
- * @param {*} context The element the tooltip describes.
- * @returns {number} Extra gap in screen px.
- */
+// Extra gap for the tooltip of a hovered element: the HUD tier inside the dock, else the world tier.
 function offsetForContext(context) {
   try {
     if (context && typeof context.closest === "function" && context.closest(HUD_CONTEXT_SELECTOR)) {
       return HUD_OFFSET_PX;
     }
   } catch (_e) {
-    // Any DOM oddity: fall back to the default world offset.
+    // odd DOM: use the world offset
   }
   return WORLD_OFFSET_PX;
 }
@@ -94,11 +49,11 @@ function offsetForContext(context) {
  * when the whole tooltip lies left of (or above) the anchor; a tooltip the
  * screen-edge clamp merely pinned level with the anchor did not flip, and
  * pushing it "up" would only fight the pin.
- * @param {{x: number, y: number}|null} placed The placed top-left, if captured.
- * @param {{width: number, height: number}} size The tooltip's size.
- * @param {number} anchorX Anchor x used for that placement.
- * @param {number} anchorY Anchor y used for that placement.
- * @returns {{x: number, y: number}} +1 pushes right/down, -1 pushes left/up.
+ * @param {{x: number, y: number}|null} placed top-left, if captured
+ * @param {{width: number, height: number}} size
+ * @param {number} anchorX
+ * @param {number} anchorY
+ * @returns {{x: number, y: number}} +1 pushes right/down, -1 pushes left/up
  */
 function signsForPlacement(placed, size, anchorX, anchorY) {
   if (!placed || !size) {
@@ -118,12 +73,12 @@ function signsForPlacement(placed, size, anchorX, anchorY) {
  * left and/or up, places again pushing that way. If the second placement flips
  * differently (the push itself crossed a flip threshold), the down-right
  * placement is kept.
- * @param {object} obj Object holding the anchor.
- * @param {[string, string]} keys Anchor x and y field names.
- * @param {number} extra Extra gap in px.
- * @param {() => *} place Runs the original placement.
- * @param {() => {x: number, y: number}} readSigns Direction the tooltip opened.
- * @returns {*} The original placement's return value.
+ * @param {object} obj holds the anchor
+ * @param {[string, string]} keys anchor x and y field names
+ * @param {number} extra
+ * @param {() => *} place runs the original placement
+ * @param {() => {x: number, y: number}} readSigns direction the tooltip opened
+ * @returns {*} the original placement's return value
  */
 function placePushed(obj, keys, extra, place, readSigns) {
   const [xKey, yKey] = keys;
@@ -151,10 +106,8 @@ function placePushed(obj, keys, extra, place, readSigns) {
   }
 }
 
-/**
- * Whether a gamepad is driving the UI (tooltips then anchor to focus, not a cursor).
- * @returns {Promise<() => boolean>} Resolves to a predicate; never throws.
- */
+// Resolves to a predicate for whether a gamepad is driving the UI (tooltips then
+// anchor to focus, not a cursor). Never throws.
 async function loadIsControllerActive() {
   try {
     const input = await import("/core/ui-next/services/input.js");
@@ -175,14 +128,11 @@ async function loadIsControllerActive() {
 
 /**
  * Run the controller's reposition with the pushed anchor. The side the tooltip
- * opened on is read from what `constrainTipToRect` actually returned — the
- * controller's `tooltipAlignment` is sticky across tooltips and does not decide
- * the flip, so it cannot be trusted for direction. The clamp is observed through
- * a temporary own-property shadow that is removed (or the previous own property
- * restored) afterward.
- * @param {object} controller The TooltipController instance.
- * @param {Function} originalReposition The unpatched reposition.
- * @returns {*} The original reposition's return value.
+ * opened on is read from what `constrainTipToRect` returned: the controller's
+ * `tooltipAlignment` is sticky across tooltips and does not decide the flip, so
+ * it can't be trusted for direction. The clamp is observed through a temporary
+ * own-property shadow that is removed (or the previous own property restored)
+ * afterward.
  */
 function repositionPushed(controller, originalReposition) {
   const hadOwnClamp = Object.prototype.hasOwnProperty.call(controller, "constrainTipToRect");
@@ -206,11 +156,8 @@ function repositionPushed(controller, originalReposition) {
   }
 }
 
-/**
- * System 1: wrap TooltipController.reposition so the cursor gap is widened
- * BEFORE the controller's own on-screen clamp runs. Idempotent and self-guarding.
- * @returns {Promise<void>} Resolves once the (attempted) patch settles.
- */
+// System 1: TooltipController. The gap goes on before the controller's own
+// on-screen clamp runs. Idempotent; a missing method only costs the offset.
 async function patchTooltipController() {
   try {
     const mod = await import("/core/ui/tooltips/tooltip-controller.js");
@@ -236,10 +183,7 @@ async function patchTooltipController() {
   }
 }
 
-/**
- * The Cursor singleton (its target picks the offset tier), or null.
- * @returns {Promise<object|null>} Never throws.
- */
+// The Cursor singleton (its target picks the offset tier), or null.
 async function loadCursor() {
   try {
     return (await import("/core/ui/input/cursor.js"))?.default ?? null;
@@ -252,7 +196,6 @@ async function loadCursor() {
  * The manager's ResizeObserver was bound to the unpatched method when the
  * singleton was built; without a fresh one a content resize would snap the
  * tooltip back to the game's gap. The manager reads the field on every use.
- * @param {object} manager The TooltipManager singleton.
  */
 function rebindManagerResizeObserver(manager) {
   if (typeof ResizeObserver !== "function" || !manager.tooltipResizeObserver) {
@@ -268,10 +211,6 @@ function rebindManagerResizeObserver(manager) {
 /**
  * Build the wrapped TooltipManager.updateTooltipPosition. The manager flips with
  * `right` (opened left of the cursor) and `above` classes on the tooltip.
- * @param {Function} originalUpdate The unpatched method.
- * @param {() => boolean} isControllerActive Gamepad predicate.
- * @param {object|null} cursor The Cursor singleton.
- * @returns {Function} The replacement method.
  */
 function makeManagerUpdate(originalUpdate, isControllerActive, cursor) {
   return function readableTooltipsUpdatePosition() {
@@ -287,11 +226,7 @@ function makeManagerUpdate(originalUpdate, isControllerActive, cursor) {
   };
 }
 
-/**
- * System 2: wrap TooltipManager.updateTooltipPosition the same way as the
- * controller. Idempotent and self-guarding.
- * @returns {Promise<void>} Resolves once the (attempted) patch settles.
- */
+// System 2: TooltipManager, wrapped the same way as the controller.
 async function patchTooltipManager() {
   try {
     const manager = (await import("/core/ui/tooltips/tooltip-manager.js"))?.default;
@@ -315,24 +250,16 @@ async function patchTooltipManager() {
 /**
  * The `offset` to hand the plot tooltip: the game's gap plus ours, as a fixed
  * target rather than an increment, so layered overrides (ours wrapping another
- * mod that wraps ours) can never stack it. A larger gap asked for by another
- * mod is kept.
- * @param {number|undefined} incoming The offset passed in by the caller, if any.
- * @returns {number} Offset in px.
+ * mod that wraps ours) can't stack it. A larger gap asked for by another mod
+ * is kept.
  */
 function plotTooltipOffset(incoming) {
   const target = PLOT_TOOLTIP_BASE_OFFSET_PX + WORLD_OFFSET_PX;
   return typeof incoming === "number" && incoming > target ? incoming : target;
 }
 
-/**
- * Register a PlotTooltip that renders `registered`'s current factory with a
- * wider `offset`, one priority above it.
- * @param {object} registry ui-next ComponentRegistry.
- * @param {{mergeProps: Function, createComponent: Function}} solid Solid helpers.
- * @param {Function} registered The registry's PlotTooltip wrapper.
- * @returns {boolean} True when a wrapper was registered.
- */
+// Register a PlotTooltip that renders `registered`'s current factory with a
+// wider `offset`. Returns true when a wrapper was registered.
 function registerWiderPlotTooltip(registry, solid, registered) {
   const original = registered.factory();
   if (typeof original !== "function" || original[PLOT_PATCHED]) {
@@ -345,19 +272,15 @@ function registerWiderPlotTooltip(registry, solid, registered) {
   registry.register({
     name: "PlotTooltip",
     createInstance: wider,
-    // SAME priority, not higher: the registry lets an equal-priority registration
+    // same priority, not higher: the registry lets an equal-priority registration
     // replace the current one, so a plot-tooltip mod that registers after us still
-    // takes effect (and is then re-wrapped below) instead of being silently ignored.
+    // takes effect and is then re-wrapped
     overridePriority: registered.overridePriority ?? 0
   });
   return true;
 }
 
-/**
- * Wait for the game HUD to register PlotTooltip.
- * @param {object} registry ui-next ComponentRegistry.
- * @returns {Promise<Function|null>} The registry wrapper, or null on timeout.
- */
+// Wait for the game HUD to register PlotTooltip; null on timeout.
 async function waitForPlotTooltip(registry) {
   for (let i = 0; i < PLOT_REGISTER_POLL_TRIES; i++) {
     const registered = registry.get("PlotTooltip");
@@ -372,9 +295,7 @@ async function waitForPlotTooltip(registry) {
 /**
  * System 3: re-register ui-next's PlotTooltip as the same component with a wider
  * `offset`. The ui-next Tooltip adds `offset` on whichever side it opens and then
- * clamps on-screen, so the gap grows outward in every corner. Game scope only;
- * idempotent and self-guarding.
- * @returns {Promise<void>} Resolves once registered or given up.
+ * clamps on-screen, so the gap grows outward in every corner. Game scope only.
  */
 async function patchPlotTooltip() {
   try {
@@ -388,8 +309,8 @@ async function patchPlotTooltip() {
       return;
     }
     // The registry's factory is a signal. Re-wrap whenever another mod's override
-    // (e.g. an improved plot tooltip loading after us) replaces ours, so the wider
-    // gap composes with it in any load order. Our own register re-runs the effect
+    // (a plot-tooltip mod loading after us) replaces ours, so the wider gap
+    // composes with it in any load order. Our own register re-runs the effect
     // once, sees our factory, and stops. The cap stops a ping-pong with another
     // mod that re-wraps the same way.
     let wraps = 0;

@@ -24,7 +24,7 @@ test("HUD tier is smaller than the world tier", () => {
   assert.ok(mod.HUD_OFFSET_PX < mod.WORLD_OFFSET_PX);
 });
 
-test("a broken context never throws — falls back to the world offset", () => {
+test("a broken context never throws and falls back to the world offset", () => {
   const throwingContext = {
     closest() {
       throw new Error("DOM gone");

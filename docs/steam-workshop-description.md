@@ -1,14 +1,14 @@
 [h1]Readable Tool Tips[/h1]
-[i]Readable Tool Tips[/i] gives every tooltip in the game a little breathing room. The base game pins a tooltip's top-left corner right at the cursor, so the first line of text sits under the pointer and gets hidden. This mod nudges whatever tooltip is showing a small, consistent distance away from the cursor, so the text is always clear of the pointer and easy to read.
-That is the whole mod. It changes [b]nothing[/b] about how tooltips look: not the font, size, color, borders, padding, or contents. It only shifts the tooltip's position so the cursor stops covering it.
+[i]Readable Tool Tips[/i] gives every tooltip in the game a little breathing room. The base game pins a tooltip's top-left corner right at the cursor, so the first line of text sits under the pointer and gets hidden. This mod nudges whatever tooltip is showing a small, consistent distance away from the cursor, so the text is clear of the pointer and easy to read.
+It changes [b]nothing[/b] about how tooltips look: font, size, color, borders, padding and contents stay as they are. It only shifts the tooltip's position so the cursor stops covering it.
 [h2]Why it exists[/h2]
 The game runs two tooltip systems. One of them already offsets its tooltips from the cursor; the main one (the one behind most plot, unit, yield, and building hovers) does not, and drops the tooltip's top-left corner directly under the pointer. On some cursors and at some hover spots that tucks the first line or two out of sight. Readable Tool Tips gives that main system the same courtesy offset the other one already has.
 [h2]What it does[/h2]
 [list]
-[*][b]Pushes tooltips clear of the cursor.[/b] Every active tooltip is translated a small distance off the pointer so its text is no longer hidden behind it.
-[*][b]Stays on-screen.[/b] When a tooltip flips to the left of or above the cursor near a screen edge, the offset flips with it: the tooltip is always pushed [i]away[/i] from the cursor, never back under it, in every corner.
-[*][b]Touches only position.[/b] No font, size, color, spacing, or content change of any kind. Tooltips read exactly as the game (or another mod) draws them, just shifted off the pointer.
-[*][b]One simple knob.[/b] A single offset value controls how far tooltips sit from the cursor, easily tuned in the mod's one small script.
+[*][b]Pushes tooltips clear of the cursor.[/b] Every active tooltip is moved a small distance off the pointer so its text is no longer hidden behind it.
+[*][b]Stays on-screen.[/b] When a tooltip flips to the left of or above the cursor near a screen edge, the offset flips with it, so the tooltip is pushed [i]away[/i] from the cursor in every corner.
+[*][b]Touches only position.[/b] Font, size, color, spacing and contents are left alone. Tooltips read exactly as the game (or another mod) draws them, just shifted off the pointer.
+[*][b]Two knobs.[/b] Two offset values in the mod's script set how far tooltips sit from the cursor: one for tooltips over the map and in popups, a smaller one for the HUD buttons.
 [/list]
 [h2]Source and documentation[/h2]
 [list]

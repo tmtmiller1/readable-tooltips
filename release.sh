@@ -7,7 +7,7 @@
 # What this does:
 #   1. Runs the quality gate (npm run release:gate: lint + syntax check + tests).
 #   2. Mirrors the mod source into dist/readable-tooltips/ (excluding dev cruft).
-#   3. Ships readable JS (no minification; transparent source is a core property).
+#   3. Ships readable JS (no minification).
 #   4. Verifies the modinfo has Version + Authors set to non-default values.
 #   5. Zips the result with `readable-tooltips/` as the zip root (Steam Workshop
 #      needs the modinfo at zip root, not inside a wrapper folder).
@@ -64,10 +64,10 @@ if [ "${SKIP_VERIFY:-0}" != "1" ] && [ -f "$SRC_DIR/package.json" ]; then
         || { echo "release: 'npm run release:gate' FAILED — aborting."; exit 1; }
 fi
 
-# ── Steam Workshop published file id ──────────────────────────────────────
-# The publishedfileid is what makes steamcmd UPDATE the existing Workshop item
-# instead of creating a duplicate. It must survive the `rm -rf dist` below, so we
-# persist it OUTSIDE dist/ in steam_workshop_id.txt (committed to the repo).
+# Steam Workshop published file id
+# The publishedfileid is what makes steamcmd update the existing Workshop item
+# instead of creating a duplicate. It must survive the `rm -rf dist` below, so it
+# is kept outside dist/ in steam_workshop_id.txt (committed to the repo).
 # Resolution priority: saved steam_workshop_id.txt is authoritative by default;
 # WORKSHOP_PUBLISHED_FILE_ID may be used only when it matches the saved id (or
 # no saved id exists); final fallback recovers from leftover dist/workshop_item.vdf.
@@ -139,9 +139,9 @@ unzip -l "$ZIP_PATH" | head -25 || true
 
 SIZE="$(du -h "$ZIP_PATH" | cut -f1)"
 
-# ── Steam Workshop upload assets ──────────────────────────────────────────
-# Prefer the branded preview card (docs/workshop-preview.svg: dark frame + logo
-# + wordmark) over the bare icon, since the card reads far better in the grid.
+# Steam Workshop upload assets
+# Prefer the preview card (docs/workshop-preview.svg: dark frame + logo +
+# wordmark) over the bare icon; the card reads better in the grid.
 PREVIEW_SRC="$SRC_DIR/docs/workshop-preview.svg"
 [ -f "$PREVIEW_SRC" ] || PREVIEW_SRC="$SRC_DIR/images/$MOD_ID-icon.svg"
 PREVIEW_OUT="$DIST_DIR/preview.png"
@@ -186,9 +186,9 @@ cat >> "$out_path" <<EOF
     "visibility"     "0"
     "title"          "$MOD_TITLE"
 EOF
-# NOTE: "description" is intentionally omitted. steamcmd's workshop_build_item
-# only updates the fields present in this VDF, so leaving it out preserves the
-# description currently set on the Steam Workshop page instead of overwriting it.
+# "description" is left out on purpose. steamcmd's workshop_build_item only
+# updates the fields present in this VDF, so leaving it out keeps the description
+# currently set on the Steam Workshop page instead of overwriting it.
 cat >> "$out_path" <<EOF
     "changenote"     "${CHANGENOTE}"
 EOF
