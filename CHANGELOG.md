@@ -7,6 +7,26 @@ matching section below by `release.sh`.
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-10-07
+
+Settings that survive a restart: the mod now carries the Tower Settings Keeper.
+
+### Fixed
+- Settings kept after a restart. Civilization VII reads back only the first entry in its mod storage, whichever one
+  a mod asks for, so options set in one session could come back as another mod's data or not at all, and a mod
+  saving its options could copy that data under its own name. Readable Tool Tips now carries the Tower Settings
+  Keeper file, which keeps every mod's settings inside the one entry the game reads correctly and repairs a store
+  another mod has already put out of order, without deleting anything. Readable Tool Tips saves nothing there
+  itself. It carries the file so that the settings of the other mods you play with stay readable, even if you never
+  install the keeper.
+- The file runs before any other script and changes nothing else in the mod. If several mods carry it, or the
+  standalone Tower Settings Keeper is installed too, one copy runs and the newest build wins. Nothing to set up:
+  existing settings carry over. Tower Settings Keeper:
+  [GitHub](https://github.com/tmtmiller1/civilizationvii_tower-settings-keeper), [Steam](https://steamcommunity.com/sharedfiles/filedetails/?id=3815023570).
+
+### Changed
+- English text: one line of the mod's description reads more plainly.
+
 ## [1.0.5] - 2026-09-21
 
 Updated for Civilization VII 1.5.0. Every tooltip that follows the cursor now sits clear of it, including the new
