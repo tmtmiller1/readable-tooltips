@@ -43,10 +43,12 @@ Raise for more spacing, lower for less.
 
 - Each wrapper calls the original method and restores every field it touches, so it composes with other mods that
   patch the same methods.
-- The `PlotTooltip` override wraps whatever plot tooltip is registered, including another mod's replacement (for
-  example QD Improved Plot Tooltip or Map Trix), at the same priority, so a plot-tooltip mod that loads later still
-  replaces it; the wrapper then re-applies itself on top of that mod's version. The offset is a fixed target, so
-  layered wrappers never stack it, and a larger gap set by another mod is kept.
+- The `PlotTooltip` override wraps whatever plot tooltip is registered, at the same priority, so a plot-tooltip mod
+  that loads later still replaces it; the wrapper then re-applies itself on top of that mod's version. It's been
+  watched doing that over QD Improved Plot Tooltip, also with Map Trix loaded. Map Trix's own tooltip, the one you see
+  when Map Trix is your only plot-tooltip mod, takes the same `offset` setting going by its source, but that pair is
+  still to be checked in a game. The offset is a fixed target, so layered wrappers never stack it, and a larger gap
+  set by another mod is kept.
 - No CSS, no `!important`, no base-game files replaced.
 - `AffectsSavedGames` is 0, so the mod applies to existing saves.
 
@@ -57,4 +59,7 @@ guarded: if a future game update moves a method, that one offset is skipped and 
 
 ## Tests
 
-`npm run verify` runs lint, a syntax check, and unit tests for the offset tiers, flip direction, and plot offset.
+`npm run verify` runs lint, a syntax check, and unit tests for the offset tiers, flip direction, and plot offset. The
+three wrappers are tested against small stand-ins for the game modules the script imports (`tests/stubs/`, mapped in
+by `tests/loader.mjs`): a second patch adds nothing, a missing method only skips that offset, and fixed-position,
+touch and gamepad tooltips go straight to the game's code.

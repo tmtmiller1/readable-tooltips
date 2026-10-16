@@ -20,7 +20,8 @@ little further from the cursor. Keep it that size.
 - `readable-tooltips.modinfo` registers the script in the shell and game scopes.
 - `text/en_us/ModText.xml` holds the localized mod name and description.
 - `tests/`, `eslint.config.js` and `package.json` are the dev gate; `npm run verify` runs lint, a syntax check and the
-  unit tests.
+  unit tests. `tests/loader.mjs` points the script's `/core/...` imports at the stand-ins in `tests/stubs/`, so the
+  wrappers can be tested under Node.
 - `images/`, `docs/` hold the icon and Steam Workshop assets.
 
 ## Releasing

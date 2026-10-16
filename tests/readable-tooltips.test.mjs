@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { register } from "node:module";
 
-// The module patches TooltipController on import via a dynamic import of an
-// engine path that doesn't exist under Node; that attempt is fully guarded, so
-// importing here is safe and just exercises the guard. We test the pure
-// offset-tier logic, which is what determines the in-game behavior.
+// The module patches the game's tooltip code on import. tests/loader.mjs points
+// those engine imports at the stubs in tests/stubs/, so the patches land there
+// quietly; wrappers.test.mjs tests the wrappers themselves. This file tests the
+// pure offset logic, which is what determines the in-game behavior.
+register("./loader.mjs", import.meta.url);
 const mod = await import("../ui/readable-tooltips.js");
 
 test("world/decision tooltips get the full offset", () => {
