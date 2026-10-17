@@ -63,3 +63,12 @@ guarded: if a future game update moves a method, that one offset is skipped and 
 three wrappers are tested against small stand-ins for the game modules the script imports (`tests/stubs/`, mapped in
 by `tests/loader.mjs`): a second patch adds nothing, a missing method only skips that offset, and fixed-position,
 touch and gamepad tooltips go straight to the game's code.
+
+## Civilopedia History Corrections
+
+This mod also carries Civilopedia History Corrections, a text patch for
+[Civilopedia Expanded: Independents](https://steamcommunity.com/sharedfiles/filedetails/?id=3815309882). With that mod
+on, six East Asian history pages (Goguryeo, the Oirat, two Ryukyu pages, Nanzhao and Balhae) give each side where
+historians in different countries disagree, and a few factual errors are fixed. With it off, the game's pages stay as
+they are. The text is in `history-corrections/`, in English, Simplified Chinese and Traditional Chinese. Every Tower mod
+that carries it writes the same text, so running several of them together is fine.
