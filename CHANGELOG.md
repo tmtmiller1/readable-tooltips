@@ -5,6 +5,15 @@ Follows [Keep a Changelog](https://keepachangelog.com/) and Semantic
 Versioning. The Steam Workshop change note for each release is generated from the
 matching section below by `release.sh`.
 
+## [1.1.0] - 2026-11-12
+
+### Fixed
+- Tooltips clear the pointer on any screen size. The gap now grows with the game's UI scale, the same scale the
+  game draws its pointer with, so on a large or high-resolution screen tooltips no longer start under the pointer.
+- The top-left buttons (Age Progress, Tech, Civics and the rest) get the same gap as every other tooltip.
+- Tooltips pinned to what you're hovering, such as leader and civ portraits on the setup screens, move clear when the
+  pointer would cover them.
+
 ## [1.0.8] - 2026-10-17
 
 - License: from this version the mod is under the Tower Mod License 1.0, in LICENSE. You can still play it, read the

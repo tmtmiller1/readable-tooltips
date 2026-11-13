@@ -1,43 +1,52 @@
 # Readable Tool Tips
 
-A small Civilization VII UI mod that moves cursor-following tooltips a little further from the pointer, so hover text
-is not tucked under the cursor. It only moves tooltips; fonts, colors, sizes and contents are untouched.
+A small Civilization VII UI mod that keeps tooltips out from under the mouse pointer, on any screen size. It only
+moves tooltips; fonts, colors, sizes and contents are untouched.
 
-## What it covers
+## Why tooltips end up under the pointer
 
-Civilization VII 1.5.0 draws cursor tooltips three ways, and the mod widens the cursor gap in each:
+The game draws its pointer at 32px times your UI scale: 32px at 1080p, 48px when the game scales the UI for a
+2880x1800 screen, 64px at 4K. Its tooltips keep a fixed gap from the pointer (24px, 22px on the map), so on a bigger
+screen they start under the pointer. Tooltips pinned to the thing you're hovering (leader and civ portraits on the
+setup screens, unit actions, some panels) sit right on its edge, so the pointer covers their top when you hover near
+the bottom of it.
+
+## What it does
+
+Civilization VII 1.5 draws tooltips with three systems, and the mod handles each:
 
 | Tooltips | Examples | Game gap | With the mod |
 |---|---|---|---|
-| `#tooltip-root` (`TooltipController`) | yields, dock buttons, diplomacy ribbon, minimap, decisions, main menu | 24px | 36px (28px on the dock) |
-| `#tooltips` (`TooltipManager`) | relationship and war-support icons, trade routes, peace deals, production items | 22px | 34px |
-| ui-next `PlotTooltip` | hovering map tiles | 22px | 34px |
+| `#tooltip-root` (`TooltipController`) | yields, the top-left buttons, diplomacy ribbon, minimap, main menu | 24px | 36px × UI scale |
+| `#tooltips` (`TooltipManager`) | relationship and war-support icons, trade routes, production items | 22px | 34px × UI scale |
+| ui-next `PlotTooltip` | hovering map tiles | 22px | 34px × UI scale |
 
-Near a screen edge each system flips its tooltip to the left of or above the cursor. The mod adds its gap on the side
-the tooltip actually opened, so a flipped tooltip is pushed further away from the cursor, and every tooltip stays
-on-screen in every corner. Tooltips anchored to an element (not the cursor), such as tech-tree cards, are left alone.
+The UI scale is the one the game sizes its pointer with: the resolution basis when the game scales the UI itself, or
+your UI scale setting. Below 100% the gap stays at the 100% size.
+
+Every other tooltip, including ones pinned to their element and the newer ui-next tooltips on the setup screens, is
+checked after the game places it. If it overlaps the pointer's reach (36px × UI scale down and right of the tip), the
+mod moves it the shortest way clear (down, right, up or left) that stays on-screen, with a margin, so the game's own
+position is left alone.
+
+Near a screen edge each system flips its tooltip to the left of or above the pointer. The mod adds its gap on the side
+the tooltip actually opened, so a flipped tooltip is pushed further away, and every tooltip stays on-screen.
 
 ## How it works
 
-The mod widens the gap inside each system's own placement code, before that system's on-screen clamp runs, so the
-game's edge-flip and clamp fit the offset tooltip on-screen:
-
-- `TooltipController.reposition` is wrapped to push the cursor anchor for the duration of the call.
+- `TooltipController.reposition` is wrapped to push the cursor anchor for the duration of the call, before the
+  controller's own on-screen clamp.
 - `TooltipManager.updateTooltipPosition` is wrapped the same way, and the manager's resize observer is rebound to the
   wrapped method.
 - `PlotTooltip` is re-registered through ui-next's `ComponentRegistry` override mechanism as the same component with a
   wider `offset`.
+- `ui/rt-keep-clear.js` follows the pointer (`mousemove`) and watches the three tooltip hosts; when a drawn tooltip
+  overlaps the pointer's reach it sets a margin on it. With a gamepad there's no pointer, and the margins come off.
 
 ## Tuning
 
-Two knobs at the top of `ui/readable-tooltips.js`:
-
-```js
-const WORLD_OFFSET_PX = 12; // world/popup/map tooltips
-const HUD_OFFSET_PX = 4;    // HUD sub-system-dock tooltips, a smaller gap
-```
-
-Raise for more spacing, lower for less.
+The gaps at UI scale 1 are at the top of `ui/readable-tooltips.js` (`CONTROLLER_GAP_PX`, `MANAGER_GAP_PX`,
+`PLOT_GAP_PX`), and the pointer's reach is `CLEAR_BOX_PX` in `ui/rt-keep-clear.js`.
 
 ## Compatibility with other mods
 
@@ -49,17 +58,31 @@ Raise for more spacing, lower for less.
   when Map Trix is your only plot-tooltip mod, takes the same `offset` setting going by its source, but that pair is
   still to be checked in a game. The offset is a fixed target, so layered wrappers never stack it, and a larger gap
   set by another mod is kept.
-- No CSS, no `!important`, no base-game files replaced.
+- It doesn't add a stylesheet or replace any base-game files. The only style it writes is a margin on a tooltip that
+  would sit under the pointer.
 - `AffectsSavedGames` is 0, so the mod applies to existing saves.
 
 ## How it loads
 
-`ui/readable-tooltips.js` is registered in both the shell (main menu) and game scopes. Every patch is idempotent and
-guarded: if a future game update moves a method, that one offset is skipped and the UI keeps working.
+`ui/readable-tooltips.js` is registered in both the shell (main menu and setup screens) and game scopes, and imports
+`ui/rt-keep-clear.js`. Every patch is idempotent and guarded: if a future game update moves a method, that one part is
+skipped and the UI keeps working.
+
+## Watched on 1.5.1
+
+Lab games on 2026-11-12, every other mod off, UI scale 90% (`tools/plans/readable-tooltips-151/`):
+
+- Leader portrait on Create Game, pointer 6px above the portrait's bottom edge: the game put the tooltip on that edge
+  (y 464, pointer at 458); the mod moved it to y 494, 36px below the pointer's tip.
+- Top-left Age Progress button: the tooltip went from 28px off the pointer to 36px, the same as the yields.
+- Same button with the UI scale set to 150% and 200% for the test: 54px and 72px.
+- A real-pointer capture at 90%: the game's pointer measured about 21x34 screen pixels, so the page's pixels are
+  screen pixels and the scale the mod reads matches the pointer you see.
 
 ## Tests
 
-`npm run verify` runs lint, a syntax check, and unit tests for the offset tiers, flip direction, and plot offset. The
+`npm run verify` runs lint, a syntax check, and unit tests for the pointer scale, the scaled gaps, flip direction,
+the plot offset and the keep-clear move. The
 three wrappers are tested against small stand-ins for the game modules the script imports (`tests/stubs/`, mapped in
 by `tests/loader.mjs`): a second patch adds nothing, a missing method only skips that offset, and fixed-position,
 touch and gamepad tooltips go straight to the game's code.

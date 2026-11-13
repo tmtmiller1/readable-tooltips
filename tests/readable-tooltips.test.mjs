@@ -9,30 +9,51 @@ import { register } from "node:module";
 register("./loader.mjs", import.meta.url);
 const mod = await import("../ui/readable-tooltips.js");
 
-test("world/decision tooltips get the full offset", () => {
-  // No context, or a context not inside the HUD dock -> full world offset.
-  assert.equal(mod.offsetForContext(null), mod.WORLD_OFFSET_PX);
-  assert.equal(mod.offsetForContext({ closest: () => null }), mod.WORLD_OFFSET_PX);
+const keep = await import("../ui/rt-keep-clear.js");
+
+test("pointer scale follows the game's own pointer sizing", () => {
+  assert.equal(keep.cursorScale({ autoScale: true, currentBasis: 1.5, globalScale: 100 }), 1.5);
+  assert.equal(keep.cursorScale({ autoScale: false, currentBasis: 1.5, globalScale: 125 }), 1.25);
+  // Under 100% the gap stays at the 1080p size, never closer.
+  assert.equal(keep.cursorScale({ autoScale: false, currentBasis: 0, globalScale: 90 }), 1);
+  // Not set up yet, missing, or broken: scale 1.
+  assert.equal(keep.cursorScale({ autoScale: true, currentBasis: 0 }), 1);
+  assert.equal(keep.cursorScale(null), 1);
+  assert.equal(keep.cursorScale({ get autoScale() { throw new Error("gone"); } }), 1);
 });
 
-test("persistent HUD (sub-system-dock) tooltips get the gentler offset", () => {
-  const hudContext = {
-    closest: (selector) => (selector.includes("sub-system-dock") ? {} : null)
-  };
-  assert.equal(mod.offsetForContext(hudContext), mod.HUD_OFFSET_PX);
+test("the extra push grows with the screen and never goes negative", () => {
+  // 1080p: the gap the mod has always used.
+  assert.equal(mod.extraOver(mod.CONTROLLER_GAP_PX, 24, 1), 12);
+  // A 2880x1800 or 3024x1890 screen draws the pointer at 48px: the tooltip goes 54px out.
+  assert.equal(mod.extraOver(mod.CONTROLLER_GAP_PX, 24, 1.5), 30);
+  // 4K, pointer 64px.
+  assert.equal(mod.extraOver(mod.CONTROLLER_GAP_PX, 24, 2), 48);
 });
 
-test("HUD tier is smaller than the world tier", () => {
-  assert.ok(mod.HUD_OFFSET_PX < mod.WORLD_OFFSET_PX);
+test("a tooltip clear of the pointer isn't moved", () => {
+  const box = keep.pointerBox(100, 100, 1);
+  assert.deepEqual(keep.clearShift({ left: 140, top: 140, right: 300, bottom: 180 }, box, { width: 1920, height: 1080 }),
+    { x: 0, y: 0 });
+  // Above-left of the pointer's tip: clear, since the pointer reaches down and right.
+  assert.deepEqual(keep.clearShift({ left: 0, top: 0, right: 99, bottom: 99 }, box, { width: 1920, height: 1080 }),
+    { x: 0, y: 0 });
 });
 
-test("a broken context never throws and falls back to the world offset", () => {
-  const throwingContext = {
-    closest() {
-      throw new Error("DOM gone");
-    }
-  };
-  assert.equal(mod.offsetForContext(throwingContext), mod.WORLD_OFFSET_PX);
+test("a tooltip under the pointer moves the shortest way clear", () => {
+  const box = keep.pointerBox(100, 100, 1); // reaches to 136, 136
+  // Starts 10px below the tip: 26px down clears it, shorter than any sideways move.
+  assert.deepEqual(keep.clearShift({ left: 60, top: 110, right: 360, bottom: 150 }, box, { width: 1920, height: 1080 }),
+    { x: 0, y: 26 });
+  // Same tooltip at the bottom of the screen: down doesn't fit, so it goes above the tip.
+  assert.deepEqual(keep.clearShift({ left: 60, top: 110, right: 360, bottom: 150 }, box, { width: 1920, height: 160 }),
+    { x: 0, y: -50 });
+});
+
+test("a tooltip that can't fit anywhere clear is left where the game put it", () => {
+  const box = keep.pointerBox(50, 50, 1);
+  assert.deepEqual(keep.clearShift({ left: 0, top: 0, right: 200, bottom: 200 }, box, { width: 200, height: 200 }),
+    { x: 0, y: 0 });
 });
 
 test("placement signs follow where the tooltip actually landed", () => {
@@ -102,16 +123,17 @@ test("anchor is restored even when the placement throws", () => {
   assert.deepEqual([obj.x, obj.y], [5, 6]);
 });
 
-test("map tooltip gets the base game gap plus the world offset", () => {
-  assert.equal(mod.plotTooltipOffset(undefined), 34);
-  assert.equal(mod.plotTooltipOffset(22), 34);
+test("map tooltip gets the scaled gap", () => {
+  assert.equal(mod.plotTooltipOffset(undefined, 1), 34);
+  assert.equal(mod.plotTooltipOffset(22, 1), 34);
+  assert.equal(mod.plotTooltipOffset(22, 1.5), 51);
 });
 
 test("layered plot-tooltip overrides never stack the offset", () => {
   // Ours wrapping a mod that wraps ours: the inner call receives our 34.
-  assert.equal(mod.plotTooltipOffset(mod.plotTooltipOffset(undefined)), 34);
+  assert.equal(mod.plotTooltipOffset(mod.plotTooltipOffset(undefined, 1), 1), 34);
 });
 
 test("a larger plot-tooltip gap asked for by another mod is kept", () => {
-  assert.equal(mod.plotTooltipOffset(50), 50);
+  assert.equal(mod.plotTooltipOffset(50, 1), 50);
 });

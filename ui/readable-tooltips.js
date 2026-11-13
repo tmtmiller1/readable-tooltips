@@ -1,25 +1,29 @@
 /**
- * Readable Tool Tips: pushes the game's cursor-following tooltips a little
- * further off the cursor so their first characters aren't tucked under the
- * pointer, without pushing any tooltip off-screen.
+ * Readable Tool Tips: keeps the game's tooltips clear of the mouse pointer on any screen size.
  *
- * The gap is widened in JS, inside each tooltip system's own placement code and
- * before its on-screen clamp, rather than with CSS: a transform lands after the
- * clamp and shoved edge-pinned tooltips (the tech/civic unlock popup) off the
- * edge. The gap goes on the side the tooltip actually opened, so a flipped
- * tooltip moves further left or up instead of back under the cursor.
+ * The game draws its pointer at 32px times the UI scale (global-scaling.js), so it's 48px on a 2880x1800 screen
+ * and 64px at 4K, but its tooltips keep a fixed 24px (22px on the map) from the pointer. On a big screen the
+ * tooltip starts under the pointer. The mod sets the gap from the same scale.
+ *
+ * Cursor-following tooltips get the wider gap inside each system's own placement code, before its on-screen
+ * clamp, so the game's edge flip and clamp still fit them on-screen. Every other tooltip (ones pinned to their
+ * element, and the ui-next tooltips on the setup screens) is checked after the game places it and nudged clear
+ * of the pointer by rt-keep-clear.js.
  */
+import { cursorScale, scaledGap, startKeepClear } from "./rt-keep-clear.js";
 
-// Extra cursor gap in screen px, on top of each system's built-in gap.
-const WORLD_OFFSET_PX = 12; // world/popup/map tooltips
-const HUD_OFFSET_PX = 4;    // HUD sub-system-dock tooltips, a smaller gap
+// Distance from the pointer to a cursor-following tooltip at UI scale 1 (1080p), per system. Scaled up with the
+// pointer. The game's own gaps, which don't scale, are below.
+const CONTROLLER_GAP_PX = 36;
+const MANAGER_GAP_PX = 34;
+const PLOT_GAP_PX = 34;
+const CONTROLLER_GAME_GAP_PX = 24;
+const MANAGER_GAME_GAP_PX = 22;
 
-// The game's own PlotTooltip passes `offset: 22` to its ui-next Tooltip root.
-const PLOT_TOOLTIP_BASE_OFFSET_PX = 22;
-
-// Hovered elements inside this container get the HUD gap; extend the selector
-// if other HUD areas should too.
-const HUD_CONTEXT_SELECTOR = ".sub-system-dock";
+// The extra push that brings a system's fixed gap up to the scaled one.
+function extraOver(gapAt1x, gameGap, scale = cursorScale()) {
+  return Math.max(0, scaledGap(gapAt1x, scale) - gameGap);
+}
 
 const REPOSITION_PATCHED = "__readableTooltipsRepositionPatched";
 const MANAGER_PATCHED = "__readableTooltipsManagerPatched";
@@ -31,18 +35,6 @@ const PLOT_REGISTER_POLL_MS = 500;
 const PLOT_REGISTER_POLL_TRIES = 120;
 // how many times the PlotTooltip wrapper may re-apply itself after another mod replaces it
 const PLOT_MAX_WRAPS = 8;
-
-// Extra gap for the tooltip of a hovered element: the HUD tier inside the dock, else the world tier.
-function offsetForContext(context) {
-  try {
-    if (context && typeof context.closest === "function" && context.closest(HUD_CONTEXT_SELECTOR)) {
-      return HUD_OFFSET_PX;
-    }
-  } catch (_e) {
-    // odd DOM: use the world offset
-  }
-  return WORLD_OFFSET_PX;
-}
 
 /**
  * Which side of the anchor a placement opened on. It opened left (or up) only
@@ -143,7 +135,7 @@ function repositionPushed(controller, originalReposition) {
     return placed;
   };
   try {
-    return placePushed(controller, ["tooltipX", "tooltipY"], offsetForContext(controller.tooltipContext),
+    return placePushed(controller, ["tooltipX", "tooltipY"], extraOver(CONTROLLER_GAP_PX, CONTROLLER_GAME_GAP_PX),
       () => originalReposition.call(controller),
       () => signsForPlacement(placed, controller.root?.getBoundingClientRect?.(),
         controller.tooltipX, controller.tooltipY));
@@ -183,15 +175,6 @@ async function patchTooltipController() {
   }
 }
 
-// The Cursor singleton (its target picks the offset tier), or null.
-async function loadCursor() {
-  try {
-    return (await import("/core/ui/input/cursor.js"))?.default ?? null;
-  } catch (_e) {
-    return null;
-  }
-}
-
 /**
  * The manager's ResizeObserver was bound to the unpatched method when the
  * singleton was built; without a fresh one a content resize would snap the
@@ -212,13 +195,13 @@ function rebindManagerResizeObserver(manager) {
  * Build the wrapped TooltipManager.updateTooltipPosition. The manager flips with
  * `right` (opened left of the cursor) and `above` classes on the tooltip.
  */
-function makeManagerUpdate(originalUpdate, isControllerActive, cursor) {
+function makeManagerUpdate(originalUpdate, isControllerActive) {
   return function readableTooltipsUpdatePosition() {
     const tooltip = this.tooltip;
     if (!tooltip || this.touchPosition || isControllerActive()) {
       return originalUpdate.call(this);
     }
-    return placePushed(this, ["x", "y"], offsetForContext(cursor?.target),
+    return placePushed(this, ["x", "y"], extraOver(MANAGER_GAP_PX, MANAGER_GAME_GAP_PX),
       () => originalUpdate.call(this), () => ({
         x: tooltip.classList.contains("right") ? -1 : 1,
         y: tooltip.classList.contains("above") ? -1 : 1
@@ -239,7 +222,7 @@ async function patchTooltipManager() {
       return;
     }
     proto.updateTooltipPosition = makeManagerUpdate(proto.updateTooltipPosition,
-      await loadIsControllerActive(), await loadCursor());
+      await loadIsControllerActive());
     proto[MANAGER_PATCHED] = true;
     rebindManagerResizeObserver(manager);
   } catch (e) {
@@ -248,13 +231,11 @@ async function patchTooltipManager() {
 }
 
 /**
- * The `offset` to hand the plot tooltip: the game's gap plus ours, as a fixed
- * target rather than an increment, so layered overrides (ours wrapping another
- * mod that wraps ours) can't stack it. A larger gap asked for by another mod
- * is kept.
+ * The `offset` to hand the plot tooltip, as a fixed target rather than an increment, so layered overrides (ours
+ * wrapping another mod that wraps ours) can't stack it. A larger gap asked for by another mod is kept.
  */
-function plotTooltipOffset(incoming) {
-  const target = PLOT_TOOLTIP_BASE_OFFSET_PX + WORLD_OFFSET_PX;
+function plotTooltipOffset(incoming, scale = cursorScale()) {
+  const target = scaledGap(PLOT_GAP_PX, scale);
   return typeof incoming === "number" && incoming > target ? incoming : target;
 }
 
@@ -333,16 +314,17 @@ async function patchPlotTooltip() {
 patchTooltipController();
 patchTooltipManager();
 patchPlotTooltip();
+startKeepClear();
 
 export {
   patchTooltipController,
   patchTooltipManager,
   patchPlotTooltip,
-  offsetForContext,
   signsForPlacement,
   placePushed,
   plotTooltipOffset,
-  WORLD_OFFSET_PX,
-  HUD_OFFSET_PX,
-  PLOT_TOOLTIP_BASE_OFFSET_PX
+  extraOver,
+  CONTROLLER_GAP_PX,
+  MANAGER_GAP_PX,
+  PLOT_GAP_PX
 };
