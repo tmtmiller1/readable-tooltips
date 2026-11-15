@@ -3,6 +3,13 @@ Generated from CHANGELOG.md by scripts/steam-changelog.mjs; release.sh uploads t
 To fix an old Workshop entry, paste the text under its ==== line into that entry's Edit box on the change-notes page.
 A block edited by hand is kept as-is. Delete a block to regenerate it from CHANGELOG.md.
 
+==== 1.1.1 | 2026-11-14 | src bf9bb836db00 | gen 35a522a73d0a ====
+[b]Version 1.1.1 · 14 November 2026[/b]
+
+[b]Fixed[/b]
+• On a Mac with a Retina screen the game draws its pointer twice as big as on other screens, and the hand pointer over buttons still covered the corner of the tooltip. The gap is now doubled there.
+• A tile tooltip locked with K slid away whenever the mouse moved onto it, so you couldn't hover anything inside it. Locked tooltips now stay put. This makes Pablo's Better Yield Tooltip work alongside this mod.
+
 ==== 1.1.0 | 2026-11-12 | src 5ff042c39a59 | gen 9abdc10abbfd ====
 [b]Version 1.1.0 · 12 November 2026[/b]
 

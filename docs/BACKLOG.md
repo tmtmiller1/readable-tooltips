@@ -1,6 +1,6 @@
 # Backlog
 
-One open item, the Map Trix check. The closed item after it came from the 2026-07-10 corpus bug-hunt audit, which
+One open item, the Map Trix check. The closed items after it came from the 2026-07-10 corpus bug-hunt audit, which
 found the mod healthy (idempotent style injection, null-guarded, only Gameface-supported CSS); it's kept for the record.
 
 ## [Low · Open, needs a game] The plot-tooltip gap with Map Trix's own tooltip
@@ -49,3 +49,21 @@ so this was to start with a DOM probe, not a code change:
    `#tooltips > div.right > *` alongside the existing `#tooltips > div > *.right`, so a future manager change can't
    silently regress corners. Keep the base `SLOT` offset rule unchanged.
 **Verify:** after the change, tooltips in all four screen corners point away from the cursor (no under-cursor overlap).
+
+## [Fixed, watched 2026-11-14] A K-locked tooltip slid away from the pointer
+
+A player reported a conflict with Pablo's Better Yield Tooltip (Workshop 3809254963), which has you press K on a
+tile and then hover the tooltip's yield row to open a breakdown. The keep-clear pass in 1.1.0 nudged every drawn
+tooltip off the pointer, the locked one included, so it ran from the mouse. The fix leaves a tooltip alone while it
+carries `pointer-events-auto`, which the game sets on a locked ui-next tooltip (`core/ui-next/components/tooltip.js`).
+
+Lab run 2026-11-14, Antiquity seed 4242, only this mod and Pablo's on, a town placed at 8,7, the tooltip shown through
+the map-search selection and locked through `TooltipModel.lock()`, pointer moves dispatched onto the yield row:
+
+- 1.1.0: the locked tooltip got `margin-top: -59.9px` and moved 60px up as the pointer reached the yield row (179px
+  with the pointer on its middle).
+- Working copy: no margin, the tooltip stayed at the same spot, and Pablo's Yield Breakdown panel was open beside it.
+- Working copy, tooltip not locked: still moved clear of the pointer.
+
+Captures: `working_screenshots/readable-tooltips-lock/` (01 and 02 on 1.1.0, 03 fixed). Probe:
+`tools/plans/readable-tooltips-lock/lock-probe.js`.

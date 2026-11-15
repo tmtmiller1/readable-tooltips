@@ -22,6 +22,19 @@ test("pointer scale follows the game's own pointer sizing", () => {
   assert.equal(keep.cursorScale({ get autoScale() { throw new Error("gone"); } }), 1);
 });
 
+test("a Retina Mac doubles the pointer scale", () => {
+  const mac = { getCursorURL: () => "fs://game/core/ui/cursors/macos/Pointer.png" };
+  assert.equal(keep.displayFactor(mac, 3024), 2);
+  assert.equal(keep.displayFactor(mac, 1512), 1);
+  assert.equal(keep.cursorScale({ autoScale: false, globalScale: 90 }, 2), 2);
+  assert.equal(keep.cursorScale({ autoScale: false, globalScale: 150 }, 2), 3);
+});
+
+test("away from a Mac the display factor is 1", () => {
+  assert.equal(keep.displayFactor(null, 3840), 1);
+  assert.equal(keep.cursorScale({ autoScale: false, globalScale: 150 }, 1), 1.5);
+});
+
 test("the extra push grows with the screen and never goes negative", () => {
   // 1080p: the gap the mod has always used.
   assert.equal(mod.extraOver(mod.CONTROLLER_GAP_PX, 24, 1), 12);
@@ -136,4 +149,11 @@ test("layered plot-tooltip overrides never stack the offset", () => {
 
 test("a larger plot-tooltip gap asked for by another mod is kept", () => {
   assert.equal(mod.plotTooltipOffset(50, 1), 50);
+});
+
+test("a locked tooltip is left where it is so the pointer can reach it", () => {
+  const el = (cls) => ({ classList: { contains: (c) => cls.includes(c) } });
+  assert.equal(keep.isLocked(el(["absolute", "tooltip-content-root", "pointer-events-auto"])), true);
+  assert.equal(keep.isLocked(el(["absolute", "tooltip-content-root", "pointer-events-none"])), false);
+  assert.equal(keep.isLocked({}), false);
 });

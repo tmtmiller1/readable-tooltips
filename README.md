@@ -58,6 +58,9 @@ The gaps at UI scale 1 are at the top of `ui/readable-tooltips.js` (`CONTROLLER_
   when Map Trix is your only plot-tooltip mod, takes the same `offset` setting going by its source, but that pair is
   still to be checked in a game. The offset is a fixed target, so layered wrappers never stack it, and a larger gap
   set by another mod is kept.
+- A tooltip you lock with K stays where it is, so you can move onto it and hover what's inside. Pablo's Better Yield
+  Tooltip works that way (lock a tile's tooltip, then hover its yield row for the breakdown), and it was watched
+  working alongside this mod on 2026-11-14.
 - It doesn't add a stylesheet or replace any base-game files. The only style it writes is a margin on a tooltip that
   would sit under the pointer.
 - `AffectsSavedGames` is 0, so the mod applies to existing saves.

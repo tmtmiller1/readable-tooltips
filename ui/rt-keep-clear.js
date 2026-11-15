@@ -27,13 +27,44 @@ const HOSTS = [
 const SETTLE_FRAMES = 2;
 const STARTED = "__readableTooltipsKeepClear";
 
+// macOS draws the game's pointer in points, so on a Retina screen it comes out twice as big in the page's pixels
+// (a 90% UI scale asks for 29 and the hand pointer measured about 50x60 on a 3024px-wide screen). The page can't
+// read the screen's backing scale; a Mac page at least this wide is on a Retina-class screen. A plain 1440p monitor
+// on a Mac counts too and gets a wider gap than it needs, which still keeps the tooltip clear.
+const RETINA_PAGE_WIDTH = 2400;
+let macCursor = null;
+
+function isMacCursor(ui) {
+  if (!ui) {
+    return false;
+  }
+  if (macCursor === null && typeof ui.getCursorURL === "function") {
+    const url = String(ui.getCursorURL() || "");
+    if (url) {
+      macCursor = url.includes("/macos/");
+    }
+  }
+  return macCursor === true;
+}
+
 /**
- * The pointer's UI scale, read the way the game sizes its pointer: the resolution basis when the game scales
- * the UI itself, else the player's UI scale setting. 1 when the game's scaling object isn't there.
- * @param {*} [gs] the game's GlobalScaling (a page global)
+ * How many page pixels one of the pointer's own pixels covers: 2 on a Retina Mac, else 1.
+ * @param {*} [ui] the game's UI object
+ * @param {number} [width] the page's width in px
  * @returns {number}
  */
-function cursorScale(gs = typeof GlobalScaling === "undefined" ? null : GlobalScaling) {
+function displayFactor(ui = typeof UI === "undefined" ? null : UI,
+  width = typeof window === "undefined" ? 0 : window.innerWidth) {
+  try {
+    return isMacCursor(ui) && width >= RETINA_PAGE_WIDTH ? 2 : 1;
+  } catch (_e) {
+    return 1;
+  }
+}
+
+// The UI scale the game sizes its pointer with: the resolution basis when the game scales the UI itself, else the
+// player's UI scale setting. 1 when the game's scaling object isn't there.
+function uiScale(gs) {
   try {
     const s = gs ? (gs.autoScale ? gs.currentBasis : gs.globalScale / 100) : NaN;
     if (Number.isFinite(s) && s > 0) {
@@ -43,6 +74,17 @@ function cursorScale(gs = typeof GlobalScaling === "undefined" ? null : GlobalSc
     // fall through
   }
   return 1;
+}
+
+/**
+ * How big the game's pointer is against its size at 1080p, in the page's pixels: the UI scale times the display
+ * factor.
+ * @param {*} [gs] the game's GlobalScaling (a page global)
+ * @param {number} [display] from displayFactor()
+ * @returns {number}
+ */
+function cursorScale(gs = typeof GlobalScaling === "undefined" ? null : GlobalScaling, display = displayFactor()) {
+  return uiScale(gs) * display;
 }
 
 /** A 1x gap in screen px at `scale`. */
@@ -121,9 +163,29 @@ function setNudge(el, shift, state) {
   state.nudges.set(el, { x: shift.x, y: shift.y, settleAt: state.frame + SETTLE_FRAMES });
 }
 
+/**
+ * A tooltip the player has locked (K on the map, or a touch). The game makes a locked ui-next tooltip take the
+ * mouse (tooltip.js sets pointer-events-auto on it) so the player can move onto it and hover what's inside, which
+ * is how other mods put extra panels on the plot tooltip. Nudging it away from the pointer would make it run from
+ * the mouse.
+ * @param {Element} el
+ * @returns {boolean}
+ */
+function isLocked(el) {
+  try {
+    return Boolean(el.classList?.contains("pointer-events-auto"));
+  } catch (_e) {
+    return false;
+  }
+}
+
 // One tooltip: measure where the game put it (its box less our nudge) and set the nudge it needs now. With no
-// pointer box (gamepad, or no mouse move yet) any nudge is taken off.
+// pointer box (gamepad, or no mouse move yet) any nudge is taken off. A locked tooltip keeps the nudge it had, so
+// it stays put under the pointer instead of jumping when the lock lands.
 function checkTooltip(el, state, box, screen) {
+  if (isLocked(el)) {
+    return;
+  }
   const prev = state.nudges.get(el);
   if (prev && prev.settleAt > state.frame) {
     state.pending = true;
@@ -217,4 +279,4 @@ async function startKeepClear() {
   }
 }
 
-export { cursorScale, scaledGap, pointerBox, clearShift, startKeepClear, CLEAR_BOX_PX };
+export { cursorScale, displayFactor, scaledGap, pointerBox, clearShift, isLocked, startKeepClear, CLEAR_BOX_PX };
